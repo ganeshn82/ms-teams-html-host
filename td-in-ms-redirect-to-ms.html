@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Generic Demo Integration</title>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+	<meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://teams.microsoft.com;">
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+                overflow: hidden;
+            }
+            #td-emb-container {
+                height: 100vh;
+                width: 100vw;
+                border: none;
+            }
+        </style>
+        <script>
+            const sendEventToTD = (action, data) => {
+                let tdEmbContainer = document.getElementById('td-emb-container');
+                tdEmbContainer.contentWindow.postMessage({ action, data }, tdEmbContainer.src);
+            };
+
+            const eventHandler = event => {
+                let tdEmbContainer = document.getElementById('td-emb-container');
+                if (event.origin != tdEmbContainer.src) return;
+                console.log('### [custom integration] <<< event received:', event);
+            };
+
+            window.onload = () => {
+                window.addEventListener('message', eventHandler);
+
+                // ✅ Changed only this part: hardcoded 'url' to avoid redirect inside Teams
+                sendEventToTD('init_td_embedded', {
+                    url: 'https://teams.microsoft.com',  // <- replace with actual base URL hosting your manifest tab HTML
+                    int: 'msteams',
+                    env: 'prd-us',
+                    aid: '677b612f79c71e3ea18557c2',
+                    view: 'workspace',
+                });
+            };
+        </script>
+    </head>
+    <body>
+        <iframe
+            id="td-emb-container"
+            title="Talkdesk Embedded"
+            src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html"
+            allow="microphone idle-detection *"
+            frameborder="0"
+        ></iframe>
+	<!-- ✅ Add this script AFTER the iframe -->
+    <script>
+      // Detect if the page is inside an iframe (e.g., Teams)
+      if (window !== window.top) {
+        window.top.location.href = window.location.href; // Redirect top window
+      } else {
+        // Handle auth logic here (e.g., extract code/state from URL)
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state');
+        if (code && state) {
+          // Exchange code for token or proceed with auth
+          console.log('Auth code:', code);
+        }
+      }
+    </script>
+    </body>
+</html>
+
