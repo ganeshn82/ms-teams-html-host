@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Generic Demo Integration</title>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="upgrade-insecure-requests"
+        />
+        <style>
+            @import url(https://fonts.googleapis.com/css?family=Open+Sans);
+            #td-emb-container {
+                height: 680px;
+                width: 480px;
+                position: absolute;
+                top: 0;
+                right: 0;
+                border: 3px dashed red;
+            }
+            #click-to-call-btn,
+            #integration-status-change-btn {
+                background-color: #439ad9;
+                text-align: center;
+                height: 40px;
+                color: #fff;
+                font-size: 14px;
+                font-weight: 300;
+                border: 1px solid #439ad9;
+                transition:
+                    background 0.2s linear,
+                    border-color 0.2s linear;
+                border-radius: 3px;
+                cursor: pointer;
+                outline: none;
+            }
+            input {
+                font-size: 14px;
+                background-color: #fff;
+                border-radius: 3px;
+                padding: 10px;
+                border: 1px solid #439ad9;
+            }
+        </style>
+        <script>
+            const sendEventToTD = (action, data) => {
+                let tdEmbContainer = document.getElementById('td-emb-container')
+
+                // Send event to TD Embedded iframe
+                tdEmbContainer.contentWindow.postMessage(
+                    {
+                        action,
+                        data
+                    },
+                    tdEmbContainer.src
+                )
+            }
+
+            const eventHandler = event => {
+                let tdEmbContainer = document.getElementById('td-emb-container')
+
+                // IMPORTANT: check the origin of the data!
+                // Validate if the events are coming from the TD Embedded iframe
+                if (event.origin != tdEmbContainer.src) {
+                    return
+                }
+
+                // The data was sent from your iframe.
+                // Data sent with postMessage is stored in event.data
+
+                console.log(
+                    '### [custom integration] <<< event received:',
+                    event
+                )
+
+                // NOTE: Write here you custom code to handle the events
+            }
+
+            window.onload = () => {
+                // Event handler
+                window.addEventListener('message', eventHandler)
+
+                // Init
+                sendEventToTD('init_td_embedded', {
+                    url: window.location.origin,
+                    int: 'custom-integration-name',
+                    env: 'prd-us',
+                    aid: 'agent-id-123',
+                    view: 'headless',
+                    app: 'conversation'
+                })
+
+                // Example of how click to call can be implemented
+                // Bind click to call function
+                document.getElementById('click-to-call-btn').onclick = () => {
+                    const input = document.getElementById('click-to-call-input')
+                    const metadata = document.getElementById(
+                        'click-to-call-metadata'
+                    )
+
+                    if (input && input.value && input.value.length !== 0) {
+                        sendEventToTD('clickToCall', {
+                            to: input.value,
+                            metadata: metadata.value
+                                ? JSON.parse(metadata.value)
+                                : {}
+                        })
+                    }
+                }
+
+                document.getElementById(
+                    'integration-status-change-btn'
+                ).onclick = () => {
+                    const input = document.getElementById(
+                        'integration-status-change-input'
+                    )
+
+                    if (input && input.value && input.value.length !== 0) {
+                        sendEventToTD('integrationStatusChanged', {
+                            status: input.value
+                        })
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Demo - Talkdesk Embedded for Custom Integrations</h1>
+
+        <!-- Example of how click to call can be implemented -->
+        <h2>Click to call</h2>
+        <input id="click-to-call-input" placeholder="Enter phone number" />
+        <button type="button" id="click-to-call-btn">Click to call</button>
+        <input
+            id="click-to-call-metadata"
+            placeholder="Enter metadata (JSON)"
+        />
+
+        <!-- Example of how change integration status can be implemented -->
+        <h2>Integration Status Change</h2>
+        <input
+            id="integration-status-change-input"
+            type="text"
+            placeholder="Enter the new status"
+        />
+        <button type="button" id="integration-status-change-btn">
+            Change integration status
+        </button>
+        <iframe
+            id="td-emb-container"
+            title="Talkdesk Embedded"
+            src="http://www.lvh.me:8080/apps/card-builder"
+            allow="microphone idle-detection *"
+            frameborder="0"
+        ></iframe>
+    </body>
+</html>
+
