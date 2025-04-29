@@ -42,14 +42,13 @@
                     int: 'msteams',
                     env: 'prd-us',
                     aid: '677b612f79c71e3ea18557c2',
-                    view: 'workspace',
+                    view: headless,
+		    app: conversation
                 });
             };
         </script>
     </head>
     <body>
-	     <iframe id="td-emb-container" title="Talkdesk Embedded" src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html" allow="microphone *" frameborder="0"></iframe>
-	    <--
         <iframe
             id="td-emb-container"
             title="Talkdesk Embedded"
@@ -57,7 +56,7 @@
             allow="microphone; camera; autoplay; clipboard-write; notifications; display-capture; fullscreen"
             frameborder="0"
 	    allowfullscreen
-        ></iframe> -->
+        ></iframe> 
 	<!-- ✅ Add this script AFTER the iframe
     <script>
       // Detect if the page is inside an iframe (e.g., Teams)
