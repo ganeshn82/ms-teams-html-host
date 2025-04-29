@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Talkdesk Embedded Fullscreen</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://teams.microsoft.com;" />
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    #td-emb-container {
+      height: 100vh;
+      width: 100vw;
+      border: none;
+    }
+  </style>
+
+  <!-- ✅ Load Talkdesk SDK -->
+  <script src="https://cdn.talkdeskapp.com/td-embeddable/1.0/td-embeddable.min.js"></script>
+</head>
+
+<body>
+  <iframe
+    id="td-emb-container"
+    title="Talkdesk Embedded"
+    allow="microphone; camera; autoplay; clipboard-write; notifications; display-capture; fullscreen"
+    allowfullscreen
+  ></iframe>
+
+  <script>
+    window.onload = () => {
+      TD.embedded.init({
+        container: document.getElementById('td-emb-container'),
+        url: 'http://lvh.me:8080/apps/card-builder', // 👈 your actual URL
+        settings: {
+          int: 'msteams',
+          env: 'prd-us',
+          aid: '677b612f79c71e3ea18557c2',
+          view: 'workspace'
+        }
+      });
+    };
+  </script>
+</body>
+</html>
