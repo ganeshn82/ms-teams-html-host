@@ -21,6 +21,17 @@
                 border: none;
             }
         </style>
+	    <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
+    <script>
+  microsoftTeams.app.initialize().then(() => {
+    microsoftTeams.media.selectMicrophone().then((mic) => {
+      console.log("Microphone selected:", mic);
+    }).catch((err) => {
+      console.error("Error selecting microphone:", err);
+    });
+  });
+</script>
+
         <script>
             const sendEventToTD = (action, data) => {
                 let tdEmbContainer = document.getElementById('td-emb-container');
