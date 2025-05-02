@@ -1,0 +1,61 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.20/MicrosoftTeams.schema.json",
+  "version": "1.9.0",
+  "manifestVersion": "1.20",
+  "id": "6d87273e-104a-4efc-9806-9cfeaa8c8b00",
+  "name": {
+    "short": "Conv Embed",
+    "full": "Conv Embed for Microsoft Teams"
+  },
+  "developer": {
+    "name": "Talkdesk Inc.",
+    "websiteUrl": "https://www.talkdesk.com/",
+    "privacyUrl": "https://www.talkdesk.com/privacy-policy",
+    "termsOfUseUrl": "https://www.talkdesk.com/terms-of-service"
+  },
+  "description": {
+    "short": "Talkdesk Conversations, in Microsoft Teams",
+    "full": "Experience seamless integration of Talkdesk Conversations, in Microsoft Teams to unleash unlimited possibilities..."
+  },
+  "icons": {
+    "outline": "outline.png",
+    "color": "color.png"
+  },
+  "accentColor": "#FF0000",
+  "staticTabs": [
+    {
+      "entityId": "TDcustom",
+      "name": "Conversations",
+      "contentUrl": "https://ganeshn82.github.io/ms-teams-html-host/td-in-ms-redirect-to-ms.html",
+      "websiteUrl": "https://ganeshn82.github.io/ms-teams-html-host/td-in-ms-redirect-to-ms.html",
+      "scopes": [
+        "personal",
+        "team"
+      ]
+    }
+  ],
+  "validDomains": [
+    "ganeshn82.github.io",
+    "prd-cdn-talkdesk.talkdesk.com",
+    "cti-client.talkdeskapp.com",
+    "teams.microsoft.com"
+  ],
+  "webApplicationInfo": {
+    "id": "6d87273e-104a-4efc-9806-9cfeaa8c8b00",
+    "resource": "api://ganeshn82.github.io/6d87273e-104a-4efc-9806-9cfeaa8c8b00"
+  },
+  "devicePermissions": [
+    "media",
+    "openExternal"
+  ],
+  "authorization": {
+    "permissions": {
+      "resourceSpecific": [
+        {
+          "name": "MicrophoneStream.Read.User",
+          "type": "Delegated"
+        }
+      ]
+    }
+  }
+}
