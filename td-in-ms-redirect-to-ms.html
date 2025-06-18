@@ -30,45 +30,6 @@
       console.error("Error selecting microphone:", err);
     });
   });
-</script>
-	 <!--   <script>
-        // Initialize Teams SDK and handle SSO
-        microsoftTeams.app.initialize().then(() => {
-            console.log("Teams SDK initialized");
-            
-            // Get the SSO token
-            microsoftTeams.authentication.getAuthToken({
-                successCallback: (token) => {
-                    console.log("SSO token received");
-                    // 1. You can use this token directly with your backend
-                    // 2. Or exchange it for your own application token
-                    
-                    // Example: Send to your iframe
-                    const tdEmbContainer = document.getElementById('td-emb-container');
-                    if (tdEmbContainer) {
-                        tdEmbContainer.contentWindow.postMessage({
-                            action: 'teams_sso_token',
-                            token: token
-                        }, tdEmbContainer.src);
-                    }
-                },
-                failureCallback: (error) => {
-                    console.error("SSO failed:", error);
-                    // Fallback to alternative authentication
-                    if (error.message.includes("DisabledForUser")) {
-                        // User doesn't have SSO enabled - use another auth method
-                        startAlternativeAuthFlow();
-                    }
-                }
-            });
-        });
-
-        function startAlternativeAuthFlow() {
-            // Implement your fallback auth flow here
-            console.log("Starting alternative auth flow");
-            // Could be Option 2 or 3 from previous solutions
-        } --> 
-
         <script>
             const sendEventToTD = (action, data) => {
                 let tdEmbContainer = document.getElementById('td-emb-container');
@@ -94,43 +55,6 @@
                 });
             };
         </script> 
-<script>
-  microsoftTeams.app.initialize().then(() => {
-  console.log('Teams SDK initialized successfully'); // Track initialization
-  
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  const state = params.get('state');
-  
-  console.log('URL params:', { code, state }); // Log received parameters
-  
-  if (code && state) {
-    console.log('Callback detected - attempting to notify success');
-    microsoftTeams.authentication.notifySuccess({
-      code: code,
-      state: state
-    });
-  } else {
-    console.log('Starting authentication flow');
-    const authUrl = `https://your-auth-server.com/auth-start?redirect_uri=${encodeURIComponent(window.location.href)}`;
-    console.log('Authentication URL:', authUrl);
-    
-    microsoftTeams.authentication.authenticate({
-      url: authUrl,
-      width: 600,
-      height: 535,
-      successCallback: function(result) {
-        console.log("Auth success callback:", result);
-      },
-      failureCallback: function(reason) {
-        console.error("Auth failure callback:", reason);
-      }
-    });
-  }
-}).catch(error => {
-  console.error('Teams initialization failed:', error);
-});
-</script>    
     </head>
     <body>
         <iframe
@@ -141,22 +65,76 @@
             frameborder="0"
 	    allowfullscreen
         ></iframe> 
-	<!-- ✅ Add this script AFTER the iframe
-    <script>
-      // Detect if the page is inside an iframe (e.g., Teams)
-      if (window !== window.top) {
-        window.top.location.href = window.location.href; // Redirect top window
-      } else {
-        // Handle auth logic here (e.g., extract code/state from URL)
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        const state = params.get('state');
-        if (code && state) {
-          // Exchange code for token or proceed with auth
-          console.log('Auth code:', code);
+ <script>
+        // Initialize Teams SDK and handle authentication
+        microsoftTeams.app.initialize().then(() => {
+            console.log("Teams SDK initialized");
+            
+            // Check if this is the callback from auth
+            const urlParams = new URLSearchParams(window.location.search);
+            const authCode = urlParams.get('code');
+            const state = urlParams.get('state');
+            
+            if (authCode && state) {
+                // We're in the callback phase
+                handleAuthCallback(authCode, state);
+            } else {
+                // Start the authentication flow
+                startAuthFlow();
+            }
+        });
+
+        function startAuthFlow() {
+            console.log("Starting authentication flow");
+            
+            // Construct your auth URL - IMPORTANT: Use your actual auth endpoint
+            const authUrl = new URL('https://your-auth-server.com/authorize');
+            authUrl.searchParams.append('response_type', 'code');
+            authUrl.searchParams.append('client_id', 'YOUR_CLIENT_ID');
+            authUrl.searchParams.append('redirect_uri', window.location.href);
+            authUrl.searchParams.append('state', 'YOUR_STATE_VALUE');
+            authUrl.searchParams.append('scope', 'openid profile email');
+            
+            microsoftTeams.authentication.authenticate({
+                url: authUrl.toString(),
+                width: 600,
+                height: 535,
+                successCallback: function(result) {
+                    console.log("Auth success:", result);
+                    // The result should contain your tokens
+                    sendTokensToIframe(result);
+                },
+                failureCallback: function(reason) {
+                    console.error("Auth failed:", reason);
+                    // Handle failure (show error, retry, etc.)
+                }
+            });
         }
-      }
-    </script>  -->
+
+        function handleAuthCallback(code, state) {
+            console.log("Handling auth callback", {code, state});
+            
+            // Here you would typically exchange the code for tokens
+            // For demo, we'll just pass them to Teams
+            microsoftTeams.authentication.notifySuccess({
+                code: code,
+                state: state
+            });
+            
+            // Alternative: Send to your iframe
+            sendTokensToIframe({code, state});
+        }
+
+        function sendTokensToIframe(tokenData) {
+            const iframe = document.getElementById('td-emb-container');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    action: 'auth_tokens',
+                    tokens: tokenData
+                }, iframe.src);
+            }
+        }
+    </script>
     </body>
 </html>
 
