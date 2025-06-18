@@ -30,7 +30,44 @@
     });
   });
 </script>
+	    <script>
+        // Initialize Teams SDK and handle SSO
+        microsoftTeams.app.initialize().then(() => {
+            console.log("Teams SDK initialized");
+            
+            // Get the SSO token
+            microsoftTeams.authentication.getAuthToken({
+                successCallback: (token) => {
+                    console.log("SSO token received");
+                    // 1. You can use this token directly with your backend
+                    // 2. Or exchange it for your own application token
+                    
+                    // Example: Send to your iframe
+                    const tdEmbContainer = document.getElementById('td-emb-container');
+                    if (tdEmbContainer) {
+                        tdEmbContainer.contentWindow.postMessage({
+                            action: 'teams_sso_token',
+                            token: token
+                        }, tdEmbContainer.src);
+                    }
+                },
+                failureCallback: (error) => {
+                    console.error("SSO failed:", error);
+                    // Fallback to alternative authentication
+                    if (error.message.includes("DisabledForUser")) {
+                        // User doesn't have SSO enabled - use another auth method
+                        startAlternativeAuthFlow();
+                    }
+                }
+            });
+        });
 
+        function startAlternativeAuthFlow() {
+            // Implement your fallback auth flow here
+            console.log("Starting alternative auth flow");
+            // Could be Option 2 or 3 from previous solutions
+        }
+<!--
         <script>
             const sendEventToTD = (action, data) => {
                 let tdEmbContainer = document.getElementById('td-emb-container');
@@ -55,7 +92,7 @@
                     view: 'workspace'
                 });
             };
-        </script>
+        </script> -->
 <script>
 	     microsoftTeams.app.initialize().then(() => {
   console.log('Teams SDK initialized successfully'); // Track initialization
