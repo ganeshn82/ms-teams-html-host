@@ -22,27 +22,31 @@
             }
         </style>
     <script>
-  microsoftTeams.app.initialize().then(() => {
-     microsoftTeams.authentication.authenticate({
-   	url: "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html",
-	    width: 600,
-	    height: 535,
-	    successCallback: (authCode) => {
-	      console.log("OAuth success:", authCode);
-	      // Exchange authCode for token via your backend or Talkdesk API
-	    },
-	    failureCallback: (error) => {
-	      console.error("OAuth failed:", error);
-	    }
-  	});
-	  
-    microsoftTeams.media.selectMicrophone().then((mic) => {
-      console.log("Microphone selected:", mic);
-    }).catch((err) => {
-      console.error("Error selecting microphone:", err);
-    });
-	  
-  });
+	  microsoftTeams.app.initialize().then(() => {
+		  // 1️⃣ Start auth
+		  microsoftTeams.authentication.authenticate({
+		    url: "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html",
+		    width: 600,
+		    height: 535,
+		    successCallback: (authCode) => {
+		      console.log("OAuth success:", authCode);
+		      // Exchange authCode for token
+		    },
+		    failureCallback: (error) => {
+		      console.error("OAuth failed:", error);
+		    }
+		  });
+		});
+		
+		// 2️⃣ Separate from auth: select mic after init
+		microsoftTeams.app.getContext().then(() => {
+		  microsoftTeams.media.selectMicrophone().then((mic) => {
+		    console.log("Microphone selected:", mic);
+		  }).catch((err) => {
+		    console.error("Error selecting microphone:", err);
+		  });
+	});
+
 	    
     </script>
         <script>
@@ -63,7 +67,8 @@
 
             const eventHandler = event => {
                 let tdEmbContainer = document.getElementById('td-emb-container');
-                if (event.origin != tdEmbContainer.src) return;
+	        const allowedOrigin = new URL(tdEmbContainer.src).origin;
+		if (event.origin !== allowedOrigin) return;
                 console.log('### [custom integration] <<< event received:', event);
             };
 
