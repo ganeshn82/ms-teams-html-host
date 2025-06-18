@@ -6,7 +6,6 @@
         <meta http-equiv="X-UA-Compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
 	<meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://teams.microsoft.com;">
-	<script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
         <style>
             html, body {
                 margin: 0;
@@ -21,54 +20,26 @@
                 border: none;
             }
         </style>
+	    <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
     <script>
-	  microsoftTeams.app.initialize().then(() => {
-		  // 1️⃣ Start auth
-		  microsoftTeams.authentication.authenticate({
-		    url: "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html",
-		    width: 600,
-		    height: 535,
-		    successCallback: (authCode) => {
-		      console.log("OAuth success:", authCode);
-		      // Exchange authCode for token
-		    },
-		    failureCallback: (error) => {
-		      console.error("OAuth failed:", error);
-		    }
-		  });
-		});
-		
-		// 2️⃣ Separate from auth: select mic after init
-		microsoftTeams.app.getContext().then(() => {
-		  microsoftTeams.media.selectMicrophone().then((mic) => {
-		    console.log("Microphone selected:", mic);
-		  }).catch((err) => {
-		    console.error("Error selecting microphone:", err);
-		  });
-	});
+  microsoftTeams.app.initialize().then(() => {
+    microsoftTeams.media.selectMicrophone().then((mic) => {
+      console.log("Microphone selected:", mic);
+    }).catch((err) => {
+      console.error("Error selecting microphone:", err);
+    });
+  });
+</script>
 
-	    
-    </script>
         <script>
             const sendEventToTD = (action, data) => {
                 let tdEmbContainer = document.getElementById('td-emb-container');
-              	// Retry until iframe is ready
-		  const trySend = () => {
-		    if (tdEmbContainer.contentWindow) {
-		      tdEmbContainer.contentWindow.postMessage({ action, data }, tdEmbContainer.src);
-		    } else {
-		      console.warn("Iframe not ready yet, retrying in 100ms...");
-		      setTimeout(trySend, 100);
-		    }
-	  	};
-	
-	  	trySend();
+                tdEmbContainer.contentWindow.postMessage({ action, data }, tdEmbContainer.src);
             };
 
             const eventHandler = event => {
                 let tdEmbContainer = document.getElementById('td-emb-container');
-	        const allowedOrigin = new URL(tdEmbContainer.src).origin;
-		if (event.origin !== allowedOrigin) return;
+                if (event.origin != tdEmbContainer.src) return;
                 console.log('### [custom integration] <<< event received:', event);
             };
 
@@ -84,7 +55,7 @@
                     view: 'workspace'
                 });
             };
-        </script> 
+        </script>
     </head>
     <body>
         <iframe
@@ -95,6 +66,21 @@
             frameborder="0"
 	    allowfullscreen
         ></iframe> 
+	<!-- ✅ Add this script AFTER the iframe
+    <script>
+      // Detect if the page is inside an iframe (e.g., Teams)
+      if (window !== window.top) {
+        window.top.location.href = window.location.href; // Redirect top window
+      } else {
+        // Handle auth logic here (e.g., extract code/state from URL)
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state');
+        if (code && state) {
+          // Exchange code for token or proceed with auth
+          console.log('Auth code:', code);
+        }
+      }
+    </script>  -->
     </body>
 </html>
-
