@@ -35,17 +35,30 @@
 	      console.error("OAuth failed:", error);
 	    }
   	});
+	  
     microsoftTeams.media.selectMicrophone().then((mic) => {
       console.log("Microphone selected:", mic);
     }).catch((err) => {
       console.error("Error selecting microphone:", err);
     });
+	  
   });
+	    
     </script>
         <script>
             const sendEventToTD = (action, data) => {
                 let tdEmbContainer = document.getElementById('td-emb-container');
-                tdEmbContainer.contentWindow.postMessage({ action, data }, tdEmbContainer.src);
+              	// Retry until iframe is ready
+		  const trySend = () => {
+		    if (tdEmbContainer.contentWindow) {
+		      tdEmbContainer.contentWindow.postMessage({ action, data }, tdEmbContainer.src);
+		    } else {
+		      console.warn("Iframe not ready yet, retrying in 100ms...");
+		      setTimeout(trySend, 100);
+		    }
+	  	};
+	
+	  	trySend();
             };
 
             const eventHandler = event => {
