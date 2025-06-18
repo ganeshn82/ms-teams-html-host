@@ -13,16 +13,22 @@
     microsoftTeams.app.initialize().then(() => {
       const code = getQueryParam("code");
       const state = getQueryParam("state");
+      const error = getQueryParam("error"); // 👈 Get error if present
 
-     if (code && state) {
-        // ✅ Login success with safety check
+      // ✅ If there is an error in redirect response
+      if (error) {
+        microsoftTeams.authentication.notifyFailure(error);
+        return;
+      }
+
+      // ✅ If code and state are present, it's a success
+      if (code && state) {
         if (microsoftTeams.authentication && typeof microsoftTeams.authentication.notifySuccess === "function") {
           microsoftTeams.authentication.notifySuccess(code);
         } else {
           console.error("Microsoft Teams authentication context not available");
         }
-      }
-     else {
+      } else {
         // 🔁 Redirect to Talkdesk login
         const redirectUri = encodeURIComponent(window.location.href);
         const talkdeskLoginUrl =
@@ -31,7 +37,7 @@
           `&response_type=code` +
           `&redirect_uri=${redirectUri}` +
           `&state=xyz` +
-          `&scope=aistudio:read aistudio:write`; // or any required scopes
+          `&scope=aistudio:read aistudio:write`;
 
         window.location.href = talkdeskLoginUrl;
       }
