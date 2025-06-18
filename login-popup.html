@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Popup</title>
+  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
+  <script>
+    // Parse query parameters
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    microsoftTeams.app.initialize().then(() => {
+      const code = getQueryParam("code");
+      const state = getQueryParam("state");
+
+      if (code && state) {
+        // ✅ OAuth completed — send token/code back to Teams
+        microsoftTeams.authentication.notifySuccess(code);
+      } else {
+        // 🔁 First time: redirect to your OAuth provider (Talkdesk login)
+        const redirectUri = encodeURIComponent(window.location.href);
+        const talkdeskLoginUrl =
+          `https://ucdirectoryprd.talkdeskapp.com/oauth/authorize?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=${redirectUri}&state=xyz`;
+
+        window.location.href = talkdeskLoginUrl;
+      }
+    });
+  </script>
+</head>
+<body>
+  <p>Logging you in…</p>
+</body>
+</html>
