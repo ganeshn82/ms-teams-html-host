@@ -56,6 +56,37 @@
                 });
             };
         </script>
+	      <script>
+        microsoftTeams.app.initialize().then(() => {
+            // Check if this is the callback page
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            const state = params.get('state');
+            
+            if (code && state) {
+                // We're in the callback - notify parent
+                microsoftTeams.authentication.notifySuccess({
+                    code: code,
+                    state: state
+                });
+            } else {
+                // Start auth flow
+                microsoftTeams.authentication.authenticate({
+                    url: 'https://your-auth-server.com/auth-start?redirect_uri=' + 
+                         encodeURIComponent(window.location.href),
+                    width: 600,
+                    height: 535,
+                    successCallback: function(result) {
+                        // Process the auth result
+                        console.log("Auth success:", result);
+                    },
+                    failureCallback: function(reason) {
+                        console.error("Auth failed:", reason);
+                    }
+                });
+            }
+        });
+    </script>
     </head>
     <body>
         <iframe
