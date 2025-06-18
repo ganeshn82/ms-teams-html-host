@@ -56,37 +56,43 @@
                 });
             };
         </script>
-	      <script>
-        microsoftTeams.app.initialize().then(() => {
-            // Check if this is the callback page
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get('code');
-            const state = params.get('state');
-            
-            if (code && state) {
-                // We're in the callback - notify parent
-                microsoftTeams.authentication.notifySuccess({
-                    code: code,
-                    state: state
-                });
-            } else {
-                // Start auth flow
-                microsoftTeams.authentication.authenticate({
-                    url: 'https://your-auth-server.com/auth-start?redirect_uri=' + 
-                         encodeURIComponent(window.location.href),
-                    width: 600,
-                    height: 535,
-                    successCallback: function(result) {
-                        // Process the auth result
-                        console.log("Auth success:", result);
-                    },
-                    failureCallback: function(reason) {
-                        console.error("Auth failed:", reason);
-                    }
-                });
-            }
-        });
-    </script>
+<script>
+	     microsoftTeams.app.initialize().then(() => {
+  console.log('Teams SDK initialized successfully'); // Track initialization
+  
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  
+  console.log('URL params:', { code, state }); // Log received parameters
+  
+  if (code && state) {
+    console.log('Callback detected - attempting to notify success');
+    microsoftTeams.authentication.notifySuccess({
+      code: code,
+      state: state
+    });
+  } else {
+    console.log('Starting authentication flow');
+    const authUrl = `https://your-auth-server.com/auth-start?redirect_uri=${encodeURIComponent(window.location.href)}`;
+    console.log('Authentication URL:', authUrl);
+    
+    microsoftTeams.authentication.authenticate({
+      url: authUrl,
+      width: 600,
+      height: 535,
+      successCallback: function(result) {
+        console.log("Auth success callback:", result);
+      },
+      failureCallback: function(reason) {
+        console.error("Auth failure callback:", reason);
+      }
+    });
+  }
+}).catch(error => {
+  console.error('Teams initialization failed:', error);
+});
+</script>    
     </head>
     <body>
         <iframe
