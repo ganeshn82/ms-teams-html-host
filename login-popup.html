@@ -14,10 +14,15 @@
       const code = getQueryParam("code");
       const state = getQueryParam("state");
 
-      if (code && state) {
-        // ✅ Login success
-        microsoftTeams.authentication.notifySuccess(code);
-      } else {
+     if (code && state) {
+        // ✅ Login success with safety check
+        if (microsoftTeams.authentication && typeof microsoftTeams.authentication.notifySuccess === "function") {
+          microsoftTeams.authentication.notifySuccess(code);
+        } else {
+          console.error("Microsoft Teams authentication context not available");
+        }
+      }
+     else {
         // 🔁 Redirect to Talkdesk login
         const redirectUri = encodeURIComponent(window.location.href);
         const talkdeskLoginUrl =
