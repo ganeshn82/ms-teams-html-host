@@ -24,12 +24,25 @@
 	    <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
     <script>
   microsoftTeams.app.initialize().then(() => {
+     microsoftTeams.authentication.authenticate({
+   	url: "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html",
+	    width: 600,
+	    height: 535,
+	    successCallback: (authCode) => {
+	      console.log("OAuth success:", authCode);
+	      // Exchange authCode for token via your backend or Talkdesk API
+	    },
+	    failureCallback: (error) => {
+	      console.error("OAuth failed:", error);
+	    }
+  	});
     microsoftTeams.media.selectMicrophone().then((mic) => {
       console.log("Microphone selected:", mic);
     }).catch((err) => {
       console.error("Error selecting microphone:", err);
     });
   });
+    </script>
         <script>
             const sendEventToTD = (action, data) => {
                 let tdEmbContainer = document.getElementById('td-emb-container');
@@ -65,76 +78,6 @@
             frameborder="0"
 	    allowfullscreen
         ></iframe> 
- <script>
-        // Initialize Teams SDK and handle authentication
-        microsoftTeams.app.initialize().then(() => {
-            console.log("Teams SDK initialized");
-            
-            // Check if this is the callback from auth
-            const urlParams = new URLSearchParams(window.location.search);
-            const authCode = urlParams.get('code');
-            const state = urlParams.get('state');
-            
-            if (authCode && state) {
-                // We're in the callback phase
-                handleAuthCallback(authCode, state);
-            } else {
-                // Start the authentication flow
-                startAuthFlow();
-            }
-        });
-
-        function startAuthFlow() {
-            console.log("Starting authentication flow");
-            
-            // Construct your auth URL - IMPORTANT: Use your actual auth endpoint
-            const authUrl = new URL('https://your-auth-server.com/authorize');
-            authUrl.searchParams.append('response_type', 'code');
-            authUrl.searchParams.append('client_id', 'YOUR_CLIENT_ID');
-            authUrl.searchParams.append('redirect_uri', window.location.href);
-            authUrl.searchParams.append('state', 'YOUR_STATE_VALUE');
-            authUrl.searchParams.append('scope', 'openid profile email');
-            
-            microsoftTeams.authentication.authenticate({
-                url: authUrl.toString(),
-                width: 600,
-                height: 535,
-                successCallback: function(result) {
-                    console.log("Auth success:", result);
-                    // The result should contain your tokens
-                    sendTokensToIframe(result);
-                },
-                failureCallback: function(reason) {
-                    console.error("Auth failed:", reason);
-                    // Handle failure (show error, retry, etc.)
-                }
-            });
-        }
-
-        function handleAuthCallback(code, state) {
-            console.log("Handling auth callback", {code, state});
-            
-            // Here you would typically exchange the code for tokens
-            // For demo, we'll just pass them to Teams
-            microsoftTeams.authentication.notifySuccess({
-                code: code,
-                state: state
-            });
-            
-            // Alternative: Send to your iframe
-            sendTokensToIframe({code, state});
-        }
-
-        function sendTokensToIframe(tokenData) {
-            const iframe = document.getElementById('td-emb-container');
-            if (iframe && iframe.contentWindow) {
-                iframe.contentWindow.postMessage({
-                    action: 'auth_tokens',
-                    tokens: tokenData
-                }, iframe.src);
-            }
-        }
-    </script>
     </body>
 </html>
 
