@@ -39,45 +39,58 @@
 
   <iframe
     id="talkdeskFrame"
+    title="Talkdesk Embedded"
     src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html"
     allow="microphone; camera; autoplay; clipboard-write; notifications; display-capture; fullscreen"
   ></iframe>
 
   <script>
+    let tenantId = "";
+
     microsoftTeams.app.initialize().then(() => {
       console.log("Teams SDK initialized");
     });
 
+    function sendEventToTD(action, data) {
+      const iframe = document.getElementById('talkdeskFrame');
+      iframe.contentWindow.postMessage({ action, data }, '*');
+    }
+
     function startLogin() {
-      const tenantUrl = document.getElementById("tenantUrl").value.trim();
-      if (!tenantUrl) {
+      tenantId = document.getElementById("tenantUrl").value.trim();
+      if (!tenantId) {
         alert("Please enter your tenant URL.");
         return;
       }
 
-      const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-popup.html");
-      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantUrl)}&redirectUri=${encodedRedirectUri}`;
+      const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-end.html");
+      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodedRedirectUri}`;
 
       microsoftTeams.authentication.authenticate({
         url: loginUrl,
         width: 600,
         height: 535,
-             
-        successCallback: (result) => {
-          console.log("Login successful. Auth code:", result);
+        successCallback: (authCode) => {
+          console.log("Login successful. Auth code:", authCode);
 
-          // ✅ Hide login UI
+          // Hide login UI, show iframe
           document.getElementById("loginForm").style.display = "none";
-
-          // ✅ Show iframe
           const iframe = document.getElementById("talkdeskFrame");
           iframe.style.display = "block";
 
-          // Optionally send token to iframe if needed:
-          // iframe.contentWindow.postMessage({ token: result }, '*');
-        } 
-
-        ,
+          // Initialize Talkdesk after iframe is ready
+          iframe.onload = () => {
+            console.log("Iframe loaded, sending init");
+            sendEventToTD('init_td_embedded', {
+              url: 'https://teams.microsoft.com',
+              int: 'msteams',
+              env: 'prd-us',
+              aid: 'your-agent-id-or-uuid',
+              view: 'workspace',
+              app: 'conversation'
+            });
+          };
+        },
         failureCallback: (error) => {
           console.error("Login failed:", error);
           alert("Login failed: " + error);
