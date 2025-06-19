@@ -49,8 +49,11 @@
     });
     
   function sendInitMessageToTD() {
-    
+          console.log("sendInitMessageToTD: Entry");
+
       const sendEventToTD = (action, data) => {
+                  console.log("sendInitMessageToTD: getElement");
+
           let tdEmbContainer = document.getElementById('td-emb-container');
           // Send event to TD Embedded iframe
           tdEmbContainer.contentWindow.postMessage({
@@ -59,6 +62,8 @@
           }, tdEmbContainer.src);
       }
       const eventHandler = (event) => {
+                          console.log("sendInitMessageToTD: handle events");
+
           let tdEmbContainer = document.getElementById('td-emb-container');
           // IMPORTANT: check the origin of the data!
           // Validate if the events are coming from the TD Embedded iframe
@@ -71,7 +76,9 @@
           console.log("### [custom integration] <<< event received:", event);
           // NOTE: Write here you custom code to handle the events
       };
-      window.onload = () => {
+      
+          console.log("sendInitMessageToTD: window.onload");
+
           // Event handler
           window.addEventListener('message', eventHandler);
           // Init
@@ -82,7 +89,7 @@
               aid: '677b612f79c71e3ea18557c2',
              view: 'workspace'
           });
-      }
+      
    }
 
 
