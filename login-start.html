@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Starting Login...</title>
+  <script>
+    function getParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    const tenant = getParam("tenant");
+    const redirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-end.html");
+
+    if (tenant) {
+      const authUrl = `https://${tenant}/oauth/authorize` +
+        `?client_id=b243bbd4f95c4d37ba8a09a485fae07d` +
+        `&response_type=code` +
+        `&redirect_uri=${redirectUri}` +
+        `&state=xyz` +
+        `&scope=aistudio:read aistudio:write`;
+
+      window.location.replace(authUrl);
+    } else {
+      document.write("Missing tenant information");
+    }
+  </script>
+</head>
+<body>
+  <p>Redirecting to login…</p>
+</body>
+</html>
