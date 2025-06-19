@@ -29,6 +29,7 @@
   </style>
 </head>
 <body>
+   <iframe id="td-emb-container" title="Talkdesk Embedded" src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html" allow="microphone *" frameborder="0"></iframe>
   <div class="container" id="loginForm">
     <h2>Talkdesk Integration</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
@@ -36,12 +37,7 @@
     <button onclick="startLogin()">Login</button>
   </div>
 
-  <iframe
-    id="td-emb-container"
-    title="Talkdesk Embedded"
-    src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/demo-generic/index.html"
-    allow="microphone; camera; autoplay; clipboard-write; notifications; display-capture; fullscreen"
-  ></iframe>
+ 
 
   <script>
     let tenantId = "";
