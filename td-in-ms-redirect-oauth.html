@@ -47,6 +47,8 @@
     microsoftTeams.app.initialize().then(() => {
       console.log("Teams SDK initialized");
     });
+    // Event handler
+          window.addEventListener('message', eventHandler);
     
   function sendInitMessageToTD() {
           console.log("sendInitMessageToTD: Entry");
@@ -79,8 +81,7 @@
       
           console.log("sendInitMessageToTD: window.onload");
 
-          // Event handler
-          window.addEventListener('message', eventHandler);
+          
           // Init
           sendEventToTD('init_td_embedded', {
               url: window.location.origin,
