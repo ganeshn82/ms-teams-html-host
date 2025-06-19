@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Talkdesk in Teams</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://teams.microsoft.com;">
+  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Talkdesk Integration</h2>
+    <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
+    <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd.talkdeskid.com" />
+    <button onclick="startLogin()">Login</button>
+  </div>
+
+  <script>
+    microsoftTeams.app.initialize().then(() => {
+      console.log("Teams SDK initialized");
+    });
+
+    function startLogin() {
+      const tenantUrl = document.getElementById("tenantUrl").value.trim();
+      if (!tenantUrl) {
+        alert("Please enter your tenant URL.");
+        return;
+      }
+
+      const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-popup.html");
+
+      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-popup.html?tenant=${encodeURIComponent(tenantUrl)}&redirectUri=${encodedRedirectUri}`;
+
+      microsoftTeams.authentication.authenticate({
+        url: loginUrl,
+        width: 600,
+        height: 535,
+        successCallback: (result) => {
+          console.log("Login successful. Auth code:", result);
+          // You can now send this code to your backend for token exchange
+        },
+        failureCallback: (error) => {
+          console.error("Login failed:", error);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
