@@ -130,18 +130,28 @@ function logout() {
   sessionStorage.clear();
   location.reload();
 }
-    function showEmbeddedUI() {
-      document.getElementById("loginForm").style.display = "none";
-      const iframe = document.getElementById("td-emb-container");
-      iframe.style.display = "block";
-      console.log("📦 Showing iframe...");
-
-      iframe.onload = () => {
-        console.log("📨 Iframe loaded, sending init...");
-        sendInitMessageToTD();
-      };
-    }
     
+   function showEmbeddedUI() {
+  document.getElementById("loginForm").style.display = "none";
+  const iframe = document.getElementById("td-emb-container");
+
+  // ✅ Make sure iframe is visible
+  iframe.style.display = "block";
+  iframe.style.height = "90vh";
+
+  // ✅ Log when iframe is loaded
+  iframe.onload = () => {
+    console.log("✅ Iframe loaded");
+  };
+
+  // ✅ Wait a bit before sending init message to avoid race condition
+  setTimeout(() => {
+    console.log("📨 Sending init_td_embedded message...");
+    sendInitMessageToTD();
+  }, 500);
+}
+
+
     function startLogin() {
       tenantId = document.getElementById("tenantUrl").value.trim();
       if (!tenantId) {
