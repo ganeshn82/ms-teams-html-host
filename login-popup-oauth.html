@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login Popup</title>
+  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
+</head>
+<body>
+  <p>Logging you in…</p>
+
+  <script>
+    function getParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    microsoftTeams.app.initialize().then(() => {
+      const code = getParam("code");
+      const state = getParam("state");
+      const error = getParam("error");
+      const tenant = getParam("tenant");
+      const redirectUri = getParam("redirectUri");
+
+      if (error) {
+        microsoftTeams.authentication.notifyFailure(error);
+        return;
+      }
+
+      if (code && state) {
+        microsoftTeams.authentication.notifySuccess(code);
+        return;
+      }
+
+      // Start login
+      if (!tenant || !redirectUri) {
+        microsoftTeams.authentication.notifyFailure("Missing tenant or redirectUri");
+        return;
+      }
+
+      const authUrl = `https://${tenant}/oauth/authorize` +
+        `?client_id=b243bbd4f95c4d37ba8a09a485fae07d` +
+        `&response_type=code` +
+        `&redirect_uri=${redirectUri}` +
+        `&state=xyz` +
+        `&scope=aistudio:read aistudio:write`;
+
+      window.location.href = authUrl;
+    });
+  </script>
+</body>
+</html>
