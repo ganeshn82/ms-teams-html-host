@@ -12,7 +12,9 @@
     }
 
     const tenant = getParam("tenant");
-    const redirectUri = decodeURIComponent(getParam("redirectUri")); // ✅ FIX HERE
+
+    const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html";
+
 
     if (tenant && redirectUri) {
       const authUrl = `https://${tenant}.talkdeskid.com/oauth/authorize` +
