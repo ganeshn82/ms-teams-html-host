@@ -94,7 +94,9 @@ window.addEventListener("load", () => {
             console.log("sendInitMessageToTD: getElement");
 
           // Send event to TD Embedded iframe
-          tdEmbContainer.contentWindow.postMessage({ action, data }, tdEmbContainer.src);
+          //tdEmbContainer.contentWindow.postMessage({ action, data }, tdEmbContainer.src);
+          tdEmbContainer.contentWindow.postMessage({ action, data }, "https://prd-cdn-talkdesk.talkdesk.com");
+
       }
       
   /*   const eventHandler = (event) => {
