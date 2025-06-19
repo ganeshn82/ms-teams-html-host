@@ -9,7 +9,8 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0; padding: 20px;
+      margin: 0;
+      padding: 20px;
     }
     .container {
       max-width: 400px;
@@ -20,15 +21,27 @@
       padding: 12px;
       margin-top: 10px;
     }
+    #talkdeskFrame {
+      display: none;
+      width: 100%;
+      height: 90vh;
+      border: none;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" id="loginForm">
     <h2>Talkdesk Integration</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
-    <input type="text" id="tenantUrl" placeholder="e.g. cti-client.talkdeskapp.com" />
+    <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
     <button onclick="startLogin()">Login</button>
   </div>
+
+  <iframe
+    id="talkdeskFrame"
+    src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html"
+    allow="microphone; camera; autoplay; clipboard-write; notifications; display-capture; fullscreen"
+  ></iframe>
 
   <script>
     microsoftTeams.app.initialize().then(() => {
@@ -43,7 +56,6 @@
       }
 
       const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-popup.html");
-
       const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantUrl)}&redirectUri=${encodedRedirectUri}`;
 
       microsoftTeams.authentication.authenticate({
@@ -52,9 +64,20 @@
         height: 535,
         successCallback: (result) => {
           console.log("Login successful. Auth code:", result);
+
+          // ✅ Hide login UI
+          document.getElementById("loginForm").style.display = "none";
+
+          // ✅ Show iframe
+          const iframe = document.getElementById("talkdeskFrame");
+          iframe.style.display = "block";
+
+          // Optionally send token to iframe if needed:
+          // iframe.contentWindow.postMessage({ token: result }, '*');
         },
         failureCallback: (error) => {
           console.error("Login failed:", error);
+          alert("Login failed: " + error);
         }
       });
     }
