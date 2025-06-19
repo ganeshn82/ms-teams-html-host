@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Completing Login…</title>
+  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
+  <script>
+    microsoftTeams.app.initialize().then(() => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+      const error = params.get("error");
+
+      if (error) {
+        microsoftTeams.authentication.notifyFailure(error);
+      } else if (code) {
+        microsoftTeams.authentication.notifySuccess(code);
+      } else {
+        microsoftTeams.authentication.notifyFailure("No auth code found");
+      }
+    });
+  </script>
+</head>
+<body>
+  <p>Completing login…</p>
+</body>
+</html>
