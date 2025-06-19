@@ -55,6 +55,33 @@
       const iframe = document.getElementById('talkdeskFrame');
       iframe.contentWindow.postMessage({ action, data }, '*');
     }
+  function sendInitMessageToTD() {
+  const iframe = document.getElementById("talkdeskFrame");
+  let attempts = 0;
+  const maxAttempts = 20;
+
+  const intervalId = setInterval(() => {
+    if (iframe && iframe.contentWindow) {
+      console.log("🔁 Sending init_td_embedded to Talkdesk iframe...");
+
+      iframe.contentWindow.postMessage({
+        action: 'init_td_embedded',
+        data: {
+          url: 'https://teams.microsoft.com',
+          int: 'msteams',
+          env: 'prd-us',
+          aid: 'your-agent-id-or-uuid',
+          view: 'workspace',
+          app: 'conversation'
+        }
+      }, '*');
+
+      attempts++;
+      if (attempts >= maxAttempts) clearInterval(intervalId);
+    }
+  }, 500); // Retry every 500ms
+}
+
 
     function startLogin() {
       tenantId = document.getElementById("tenantUrl").value.trim();
@@ -81,16 +108,9 @@
 
           // Initialize Talkdesk after iframe is ready
           iframe.onload = () => {
-            console.log("Iframe loaded, sending init");
-            sendEventToTD('init_td_embedded', {
-              url: 'https://teams.microsoft.com',
-              int: 'msteams',
-              env: 'prd-us',
-              aid: 'your-agent-id-or-uuid',
-              view: 'workspace',
-              app: 'conversation'
-            });
-          };
+  console.log("✅ Iframe loaded, trying to send init message...");
+  sendInitMessageToTD();
+};
         },
         failureCallback: (error) => {
           console.error("Login failed:", error);
