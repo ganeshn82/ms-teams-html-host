@@ -12,14 +12,14 @@
     }
 
     const tenant = getParam("tenant");
-    const redirectUri = getParam("redirectUri");
+    const redirectUri = decodeURIComponent(getParam("redirectUri")); // ✅ FIX HERE
 
     if (tenant && redirectUri) {
-  const authUrl = `https://${tenant}.talkdeskid.com/oauth/authorize` +
-  `?client_id=b243bbd4f95c4d37ba8a09a485fae07d` +
-  `&response_type=code` +
-  `&redirect_uri=${redirectUri}` +
-  `&state=xyz` ;
+      const authUrl = `https://${tenant}.talkdeskid.com/oauth/authorize` +
+        `?client_id=b243bbd4f95c4d37ba8a09a485fae07d` +
+        `&response_type=code` +
+        `&redirect_uri=${redirectUri}` + // ✅ now it's unencoded, as required
+        `&state=xyz`;
 
       window.location.replace(authUrl);
     } else {
