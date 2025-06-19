@@ -1,149 +1,106 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Generic Demo Integration</title>
-        <meta charset="UTF-8" />
-        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <meta
-            http-equiv="Content-Security-Policy"
-            content="upgrade-insecure-requests"
-        />
-        <style>
-            @import url(https://fonts.googleapis.com/css?family=Open+Sans);
-            #td-emb-container {
-                height: 680px;
-                width: 480px;
-                position: absolute;
-                top: 0;
-                right: 0;
-                border: 3px dashed red;
-            }
-            #click-to-call-btn,
-            #integration-status-change-btn {
-                background-color: #439ad9;
-                text-align: center;
-                height: 40px;
-                color: #fff;
-                font-size: 14px;
-                font-weight: 300;
-                border: 1px solid #439ad9;
-                transition:
-                    background 0.2s linear,
-                    border-color 0.2s linear;
-                border-radius: 3px;
-                cursor: pointer;
-                outline: none;
-            }
-            input {
-                font-size: 14px;
-                background-color: #fff;
-                border-radius: 3px;
-                padding: 10px;
-                border: 1px solid #439ad9;
-            }
-        </style>
-        <script>
-            const sendEventToTD = (action, data) => {
-                let tdEmbContainer = document.getElementById('td-emb-container')
+<head>
+  <meta charset="UTF-8" />
+  <title>Talkdesk Embedded Integration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+  <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
 
-                // Send event to TD Embedded iframe
-                tdEmbContainer.contentWindow.postMessage(
-                    {
-                        action,
-                        data
-                    },
-                    tdEmbContainer.src
-                )
-            }
+    #td-emb-container {
+      width: 100%;
+      height: 90vh;
+      border: none;
+    }
 
-            const eventHandler = event => {
-                let tdEmbContainer = document.getElementById('td-emb-container')
+    input, button {
+      font-size: 14px;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #439ad9;
+      border-radius: 3px;
+    }
 
-                // IMPORTANT: check the origin of the data!
-                // Validate if the events are coming from the TD Embedded iframe
-                if (event.origin != tdEmbContainer.src) {
-                    return
-                }
+    button {
+      background-color: #439ad9;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>Talkdesk Embedded Integration</h2>
 
-                // The data was sent from your iframe.
-                // Data sent with postMessage is stored in event.data
+  <div>
+    <h3>Click to Call</h3>
+    <input id="click-to-call-input" placeholder="Enter phone number" />
+    <input id="click-to-call-metadata" placeholder="Enter metadata (JSON)" />
+    <button id="click-to-call-btn">Click to Call</button>
+  </div>
 
-                console.log(
-                    '### [custom integration] <<< event received:',
-                    event
-                )
+  <div>
+    <h3>Integration Status Change</h3>
+    <input id="integration-status-change-input" placeholder="Enter new status" />
+    <button id="integration-status-change-btn">Change Status</button>
+  </div>
 
-                // NOTE: Write here you custom code to handle the events
-            }
+  <iframe
+    id="td-emb-container"
+    title="Talkdesk Embedded"
+    src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html"
+    allow="microphone; camera; autoplay; clipboard-write; notifications; display-capture; fullscreen"
+  ></iframe>
 
-            window.onload = () => {
-                // Event handler
-                window.addEventListener('message', eventHandler)
+  <script>
+    const iframe = document.getElementById('td-emb-container');
 
-                // Init
-                sendEventToTD('init_td_embedded', {
-                    url: window.location.origin,
-                    int: 'custom-integration-name',
-                    env: 'prd-us',
-                    aid: 'agent-id-123',
-                    view: 'headless',
-                    app: 'conversation'
-                })
+    function sendEventToTD(action, data) {
+      iframe.contentWindow.postMessage({ action, data }, '*');
+    }
 
-                // Example of how click to call can be implemented
-                // Bind click to call function
-                document.getElementById('click-to-call-btn').onclick = () => {
-                    const input = document.getElementById('click-to-call-input')
-                    const metadata = document.getElementById(
-                        'click-to-call-metadata'
-                    )
+    function eventHandler(event) {
+      if (!event.data || typeof event.data !== 'object') return;
+      console.log("<<< Event received from TD:", event.data);
+    }
 
-                    if (input && input.value && input.value.length !== 0) {
-                        sendEventToTD('clickToCall', {
-                            to: input.value,
-                            metadata: metadata.value
-                                ? JSON.parse(metadata.value)
-                                : {}
-                        })
-                    }
-                }
+    window.addEventListener('message', eventHandler);
 
-                document.getElementById(
-                    'integration-status-change-btn'
-                ).onclick = () => {
-                    const input = document.getElementById(
-                        'integration-status-change-input'
-                    )
+    window.onload = () => {
+      // Initialize Talkdesk iframe
+      sendEventToTD('init_td_embedded', {
+        url: "https://ucdirectoryprd.mytalkdesk.com",
+        int: 'msteams-integration',
+        env: 'prd-us',
+        aid: 'agent-id-123',
+        view: 'workspace',
+        app: 'conversation'
+      });
 
-                    if (input && input.value && input.value.length !== 0) {
-                        sendEventToTD('integrationStatusChanged', {
-                            status: input.value
-                        })
-                    }
-                }
-            }
-        </script>
-    </head>
-    <body>
-      
-     <!--   <iframe
-            id="td-emb-container"
-            title="Talkdesk Embedded"
-            src="https://lvh.me:8080/apps/card-builder"
-            allow="microphone; camera; autoplay"
-            frameborder="0"
-        ></iframe> -->
+      document.getElementById('click-to-call-btn').onclick = () => {
+        const to = document.getElementById('click-to-call-input').value;
+        const meta = document.getElementById('click-to-call-metadata').value;
 
-     <iframe
-  id="talkdeskFrame"
-  src="https://ucdirectoryprd.mytalkdesk.com/atlas/apps/home"
-  allow="microphone; camera; autoplay; clipboard-write; notifications; display-capture; fullscreen"
-  frameborder="0"
-  style="width: 100%; height: 100vh;"
-></iframe>
+        if (to) {
+          sendEventToTD('clickToCall', {
+            to,
+            metadata: meta ? JSON.parse(meta) : {}
+          });
+        }
+      };
 
-
-    </body>
+      document.getElementById('integration-status-change-btn').onclick = () => {
+        const status = document.getElementById('integration-status-change-input').value;
+        if (status) {
+          sendEventToTD('integrationStatusChanged', { status });
+        }
+      };
+    };
+  </script>
+</body>
 </html>
-
