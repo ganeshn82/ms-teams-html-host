@@ -44,7 +44,7 @@
 
       const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-end.html");
 
-      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html.html?tenant=${encodeURIComponent(tenantUrl)}&redirectUri=${encodedRedirectUri}`;
+      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantUrl)}&redirectUri=${encodedRedirectUri}`;
 
       microsoftTeams.authentication.authenticate({
         url: loginUrl,
