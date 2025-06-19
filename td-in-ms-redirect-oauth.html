@@ -112,10 +112,8 @@
           iframe.style.display = "block";
 
           // Initialize Talkdesk after iframe is ready
-          iframe.onload = () => {
-  console.log("✅ Iframe loaded, trying to send init message...");
-  sendInitMessageToTD();
-};
+          console.log("✅ Iframe loaded, trying to send init message...");
+          sendInitMessageToTD();
         },
         failureCallback: (error) => {
           console.error("Login failed:", error);
