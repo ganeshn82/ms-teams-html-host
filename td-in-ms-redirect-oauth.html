@@ -110,9 +110,10 @@
           document.getElementById("loginForm").style.display = "none";
           const iframe = document.getElementById("td-emb-container");
           iframe.style.display = "block";
+          console.log("Setting the iframe as block");
 
           // Initialize Talkdesk after iframe is ready
-          console.log("✅ Iframe loaded, trying to send init message...");
+          console.log("Iframe loaded, trying to send init message...");
           sendInitMessageToTD();
         },
         failureCallback: (error) => {
