@@ -53,11 +53,11 @@
     const tdEmbContainer = document.getElementById('td-emb-container');
 
     // Validate origin
-    const expectedOrigin = new URL(tdEmbContainer.src).origin;
-    if (event.origin !== expectedOrigin) {
-      console.log('❌ Validation failed: unexpected origin', event.origin);
-      return;
-    }
+   // const expectedOrigin = new URL(tdEmbContainer.src).origin;
+   // if (event.origin !== expectedOrigin) {
+   //   console.log('❌ Validation failed: unexpected origin', event.origin);
+  //    return;
+  //  }
 
     console.log("✅ [custom integration] <<< event received:", event);
     // You can add more handlers here
@@ -71,14 +71,17 @@
           console.log("sendInitMessageToTD: Entry");
 
       const sendEventToTD = (action, data) => {
-                  console.log("sendInitMessageToTD: getElement");
-
+              
           let tdEmbContainer = document.getElementById('td-emb-container');
+            console.log("sendInitMessageToTD: getElement");
+
           // Send event to TD Embedded iframe
           tdEmbContainer.contentWindow.postMessage({
               action,
               data
           }, tdEmbContainer.src);
+
+
       }
       const eventHandler = (event) => {
                           console.log("sendInitMessageToTD: handle events");
