@@ -40,6 +40,8 @@
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
     <button onclick="startLogin()">Login</button>
   </div>
+  <button onclick="logout()" style="margin-top: 20px;">Logout</button>
+
 
   <script>
     let tenantId = "";
@@ -47,6 +49,22 @@
     microsoftTeams.app.initialize().then(() => {
       console.log("Teams SDK initialized");
     });
+
+    
+window.addEventListener("load", () => {
+  const savedTenant = sessionStorage.getItem("tenantId");
+  const savedAuth = sessionStorage.getItem("authCode");
+
+  if (savedTenant && savedAuth) {
+    console.log("🔁 Session found, skipping login");
+    tenantId = savedTenant;
+    showEmbeddedUI();
+  } else {
+    console.log("🆕 No session found, showing login form");
+    document.getElementById("loginForm").style.display = "block";
+  }
+});
+    
    
     // ✅ Define globally so it's available at addEventListener time
   const eventHandler = (event) => {
@@ -76,14 +94,10 @@
             console.log("sendInitMessageToTD: getElement");
 
           // Send event to TD Embedded iframe
-          tdEmbContainer.contentWindow.postMessage({
-              action,
-              data
-          }, tdEmbContainer.src);
-
-
+          tdEmbContainer.contentWindow.postMessage({ action, data }, tdEmbContainer.src);
       }
-      const eventHandler = (event) => {
+      
+  /*   const eventHandler = (event) => {
                           console.log("sendInitMessageToTD: handle events");
 
           let tdEmbContainer = document.getElementById('td-emb-container');
@@ -97,7 +111,7 @@
           // Data sent with postMessage is stored in event.data
           console.log("### [custom integration] <<< event received:", event);
           // NOTE: Write here you custom code to handle the events
-      };
+      }; */
       
           console.log("sendInitMessageToTD: window.onload");
 
@@ -112,8 +126,22 @@
           });
       
    }
+function logout() {
+  sessionStorage.clear();
+  location.reload();
+}
+    function showEmbeddedUI() {
+      document.getElementById("loginForm").style.display = "none";
+      const iframe = document.getElementById("td-emb-container");
+      iframe.style.display = "block";
+      console.log("📦 Showing iframe...");
 
-
+      iframe.onload = () => {
+        console.log("📨 Iframe loaded, sending init...");
+        sendInitMessageToTD();
+      };
+    }
+    
     function startLogin() {
       tenantId = document.getElementById("tenantUrl").value.trim();
       if (!tenantId) {
@@ -131,6 +159,13 @@
         height: 535,
         successCallback: (authCode) => {
           console.log("Login successful. Auth code:", authCode);
+          
+          // Store in session
+          sessionStorage.setItem("authCode", authCode);
+          sessionStorage.setItem("tenantId", tenantId);
+
+          showEmbeddedUI();
+          /*
 
           // Hide login UI, show iframe
           document.getElementById("loginForm").style.display = "none";
@@ -140,7 +175,7 @@
 
           // Initialize Talkdesk after iframe is ready
           console.log("Iframe loaded, trying to send init message...");
-          sendInitMessageToTD();
+          sendInitMessageToTD(); */
         },
         failureCallback: (error) => {
           console.error("Login failed:", error);
