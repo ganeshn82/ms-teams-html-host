@@ -47,8 +47,25 @@
     microsoftTeams.app.initialize().then(() => {
       console.log("Teams SDK initialized");
     });
-    // Event handler
-          window.addEventListener('message', eventHandler);
+   
+    // ✅ Define globally so it's available at addEventListener time
+  const eventHandler = (event) => {
+    const tdEmbContainer = document.getElementById('td-emb-container');
+
+    // Validate origin
+    const expectedOrigin = new URL(tdEmbContainer.src).origin;
+    if (event.origin !== expectedOrigin) {
+      console.log('❌ Validation failed: unexpected origin', event.origin);
+      return;
+    }
+
+    console.log("✅ [custom integration] <<< event received:", event);
+    // You can add more handlers here
+  };
+
+  // ✅ Register listener once globally
+  window.addEventListener('message', eventHandler);
+
     
   function sendInitMessageToTD() {
           console.log("sendInitMessageToTD: Entry");
