@@ -26,7 +26,7 @@
   <div class="container">
     <h2>Talkdesk Integration</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
-    <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd.talkdeskid.com" />
+    <input type="text" id="tenantUrl" placeholder="e.g. cti-client.talkdeskapp.com" />
     <button onclick="startLogin()">Login</button>
   </div>
 
@@ -43,7 +43,6 @@
       }
 
       const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-end.html");
-
       const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantUrl)}&redirectUri=${encodedRedirectUri}`;
 
       microsoftTeams.authentication.authenticate({
@@ -52,7 +51,6 @@
         height: 535,
         successCallback: (result) => {
           console.log("Login successful. Auth code:", result);
-          // You can now send this code to your backend for token exchange
         },
         failureCallback: (error) => {
           console.error("Login failed:", error);
