@@ -62,19 +62,14 @@
         url: loginUrl,
         width: 600,
         height: 535,
-        successCallback: (result) => {
+                successCallback: (result) => {
           console.log("Login successful. Auth code:", result);
+        
+          // ✅ Instead of showing an iframe, redirect to your Talkdesk-hosted UI
+          window.location.href = "https://ganeshn82.github.io/ms-teams-html-host/index.html?code=" + encodeURIComponent(result);
+        }
 
-          // ✅ Hide login UI
-          document.getElementById("loginForm").style.display = "none";
-
-          // ✅ Show iframe
-          const iframe = document.getElementById("talkdeskFrame");
-          iframe.style.display = "block";
-
-          // Optionally send token to iframe if needed:
-          // iframe.contentWindow.postMessage({ token: result }, '*');
-        },
+        ,
         failureCallback: (error) => {
           console.error("Login failed:", error);
           alert("Login failed: " + error);
