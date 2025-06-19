@@ -2,51 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Talkdesk Embed</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://teams.microsoft.com;">
+  <title>Talkdesk Test</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-    }
-    iframe {
-      border: none;
-      width: 100%;
-      height: 100vh;
-    }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    iframe { width: 100%; height: 100vh; border: none; }
   </style>
-  <script>
-    function initTalkdesk() {
-      const iframe = document.getElementById('talkdeskFrame');
-
-      iframe.onload = () => {
-        // Give it 300ms to be ready inside iframe
-        setTimeout(() => {
-          iframe.contentWindow.postMessage({
-            action: 'init_td_embedded',
-            data: {
-              url: window.location.origin,
-              int: 'custom-integration-name',
-              env: 'prd-us',
-              aid: 'agent-id-123',
-              view: 'headless',
-              app: 'conversation'
-            }
-          }, "https://prd-cdn-talkdesk.talkdesk.com");
-        }, 300);
-      };
-    }
-
-    window.addEventListener('DOMContentLoaded', initTalkdesk);
-  </script>
 </head>
 <body>
-  <iframe
-    id="talkdeskFrame"
-    src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html"
-    allow="microphone; camera; autoplay; clipboard-write; notifications; display-capture; fullscreen"
-  ></iframe>
+  <iframe src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html"></iframe>
 </body>
 </html>
