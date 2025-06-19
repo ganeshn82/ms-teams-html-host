@@ -21,7 +21,7 @@
       padding: 12px;
       margin-top: 10px;
     }
-    #talkdeskFrame {
+    #td-emb-container {
       display: none;
       width: 100%;
       height: 90vh;
@@ -38,7 +38,7 @@
   </div>
 
   <iframe
-    id="talkdeskFrame"
+    id="td-emb-container"
     title="Talkdesk Embedded"
     src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html"
     allow="microphone; camera; autoplay; clipboard-write; notifications; display-capture; fullscreen"
@@ -50,36 +50,41 @@
     microsoftTeams.app.initialize().then(() => {
       console.log("Teams SDK initialized");
     });
-
-    function sendEventToTD(action, data) {
-      const iframe = document.getElementById('talkdeskFrame');
-      iframe.contentWindow.postMessage({ action, data }, '*');
-    }
+    
   function sendInitMessageToTD() {
-  const iframe = document.getElementById("talkdeskFrame");
-  let attempts = 0;
-  const maxAttempts = 20;
-
-  const intervalId = setInterval(() => {
-    if (iframe && iframe.contentWindow) {
-      console.log("🔁 Sending init_td_embedded to Talkdesk iframe...");
-
-      iframe.contentWindow.postMessage({
-        action: 'init_td_embedded',
-        data: {
-          url: 'https://teams.microsoft.com',
-          int: 'msteams',
-          env: 'prd-us',
-          aid: 'your-agent-id-or-uuid',
-          view: 'workspace',
-          app: 'conversation'
-        }
-      }, '*');
-
-      attempts++;
-      if (attempts >= maxAttempts) clearInterval(intervalId);
-    }
-  }, 500); // Retry every 500ms
+    
+ const sendEventToTD = (action, data) => {
+          let tdEmbContainer = document.getElementById('td-emb-container');
+          // Send event to TD Embedded iframe
+          tdEmbContainer.contentWindow.postMessage({
+              action,
+              data
+          }, tdEmbContainer.src);
+      }
+      const eventHandler = (event) => {
+          let tdEmbContainer = document.getElementById('td-emb-container');
+          // IMPORTANT: check the origin of the data!
+          // Validate if the events are coming from the TD Embedded iframe
+          if (event.origin != tdEmbContainer.src) {
+              return;
+          }
+          // The data was sent from your iframe.
+          // Data sent with postMessage is stored in event.data
+          console.log("### [custom integration] <<< event received:", event);
+          // NOTE: Write here you custom code to handle the events
+      };
+      window.onload = () => {
+          // Event handler
+          window.addEventListener('message', eventHandler);
+          // Init
+          sendEventToTD('init_td_embedded', {
+              url: window.location.origin,
+              int: 'msteams',
+              env: 'prd-us',
+              aid: '677b612f79c71e3ea18557c2',
+             view: 'workspace'
+          });
+      }
 }
 
 
@@ -103,7 +108,7 @@
 
           // Hide login UI, show iframe
           document.getElementById("loginForm").style.display = "none";
-          const iframe = document.getElementById("talkdeskFrame");
+          const iframe = document.getElementById("td-emb-container");
           iframe.style.display = "block";
 
           // Initialize Talkdesk after iframe is ready
