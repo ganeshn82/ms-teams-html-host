@@ -3,15 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <title>Starting Login...</title>
+</head>
+<body>
+  <p>Redirecting to Talkdesk login…</p>
   <script>
     function getParam(name) {
       return new URLSearchParams(window.location.search).get(name);
     }
 
     const tenant = getParam("tenant");
-    const redirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-end.html");
+    const redirectUri = getParam("redirectUri");
 
-    if (tenant) {
+    if (tenant && redirectUri) {
       const authUrl = `https://${tenant}/oauth/authorize` +
         `?client_id=b243bbd4f95c4d37ba8a09a485fae07d` +
         `&response_type=code` +
@@ -21,11 +24,8 @@
 
       window.location.replace(authUrl);
     } else {
-      document.write("Missing tenant information");
+      document.body.innerHTML = "<p>Missing tenant or redirect URI</p>";
     }
   </script>
-</head>
-<body>
-  <p>Redirecting to login…</p>
 </body>
 </html>
