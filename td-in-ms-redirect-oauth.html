@@ -33,49 +33,7 @@
     }
   </style>
 </head>
-  <script>
-     function startLogin() {
-      tenantId = document.getElementById("tenantUrl").value.trim();
-      if (!tenantId) {
-        alert("Please enter your tenant URL.");
-        return;
-      }
-
-      const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-popup.html");
-
-      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodedRedirectUri}`;
-
-      microsoftTeams.authentication.authenticate({
-        url: loginUrl,
-        width: 600,
-        height: 535,
-        successCallback: (authCode) => {
-          console.log("Login successful. Auth code:", authCode);
-          
-          // Store in session
-          sessionStorage.setItem("authCode", authCode);
-          sessionStorage.setItem("tenantId", tenantId);
-
-          showEmbeddedUI(authCode);
-          /*
-
-          // Hide login UI, show iframe
-          document.getElementById("loginForm").style.display = "none";
-          const iframe = document.getElementById("td-emb-container");
-          iframe.style.display = "block";
-          console.log("Setting the iframe as block");
-
-          // Initialize Talkdesk after iframe is ready
-          console.log("Iframe loaded, trying to send init message...");
-          sendInitMessageToTD(); */
-        },
-        failureCallback: (error) => {
-          console.error("Login failed:", error);
-          alert("Login failed: " + error);
-        }
-      });
-    }
-  </script>
+  
 <body>
   <div class="container" id="loginForm">
     <h2>Talkdesk Integration</h2>
@@ -209,6 +167,49 @@ function logout() {
     sendInitMessageToTD(authCode);
   }, 500);
 }
+
+     function startLogin() {
+      tenantId = document.getElementById("tenantUrl").value.trim();
+      if (!tenantId) {
+        alert("Please enter your tenant URL.");
+        return;
+      }
+
+      const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-popup.html");
+
+      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodedRedirectUri}`;
+
+      microsoftTeams.authentication.authenticate({
+        url: loginUrl,
+        width: 600,
+        height: 535,
+        successCallback: (authCode) => {
+          console.log("Login successful. Auth code:", authCode);
+          
+          // Store in session
+          sessionStorage.setItem("authCode", authCode);
+          sessionStorage.setItem("tenantId", tenantId);
+
+          showEmbeddedUI(authCode);
+          /*
+
+          // Hide login UI, show iframe
+          document.getElementById("loginForm").style.display = "none";
+          const iframe = document.getElementById("td-emb-container");
+          iframe.style.display = "block";
+          console.log("Setting the iframe as block");
+
+          // Initialize Talkdesk after iframe is ready
+          console.log("Iframe loaded, trying to send init message...");
+          sendInitMessageToTD(); */
+        },
+        failureCallback: (error) => {
+          console.error("Login failed:", error);
+          alert("Login failed: " + error);
+        }
+      });
+    }
+  
 
 
    
