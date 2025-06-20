@@ -168,14 +168,18 @@ function logout() {
 }
 
      function startLogin() {
-      tenantId = document.getElementById("tenantUrl").value.trim();
+        console.log("🔁 startLogin called");
+tenantId = document.getElementById("tenantUrl").value.trim();
       if (!tenantId) {
         alert("Please enter your tenant URL.");
         return;
       }
-    // ✅ Now the DOM is ready, attach the handler
-    document.getElementById("loginBtn").onclick = startLogin;
-       
+
+       window.onload = () => {
+  document.getElementById("loginBtn").onclick = startLogin;
+  console.log("✅ Login button handler bound");
+};
+
       const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-popup.html");
 
       const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodedRedirectUri}`;
