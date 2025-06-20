@@ -72,34 +72,72 @@
         }
       });
     });
+async function exchangeCodeForToken(authCode, tenant) {
+  const clientId = 'YOUR_CLIENT_ID';  // 🔁 Replace with your actual client_id
+  const redirectUri = 'https://ganeshn82.github.io/ms-teams-html-host/login-popup.html';
 
-    function startLogin() {
-      console.log("🔁 startLogin called");
-      tenantId = document.getElementById("tenantUrl").value.trim();
-      if (!tenantId) {
-        alert("Please enter your tenant URL.");
-        return;
+  const tokenUrl = `https://${tenant}.talkdeskid.com/oauth/token`;
+
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      code: authCode
+    })
+  });
+
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(json.error_description || 'Token exchange failed');
+  }
+
+  console.log("🎫 Token response:", json);
+  return json.access_token;
+}
+
+async function startLogin() {
+  console.log("🔁 startLogin called");
+  tenantId = document.getElementById("tenantUrl").value.trim();
+  if (!tenantId) {
+    alert("Please enter your tenant URL.");
+    return;
+  }
+
+  const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-popup.html");
+  const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodedRedirectUri}`;
+
+  microsoftTeams.authentication.authenticate({
+    url: loginUrl,
+    width: 600,
+    height: 535,
+    successCallback: async (authCode) => {
+      console.log("✅ Login successful. Auth code:", authCode);
+
+      sessionStorage.setItem("authCode", authCode);
+      sessionStorage.setItem("tenantId", tenantId);
+
+      try {
+        const accessToken = await exchangeCodeForToken(authCode, tenantId);
+        sessionStorage.setItem("accessToken", accessToken);
+
+        showEmbeddedUI(accessToken); // 🔁 pass token
+      } catch (err) {
+        console.error("❌ Failed to exchange code for token:", err);
+        alert("Login failed while exchanging code for token.");
       }
-
-      const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-popup.html");
-      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodedRedirectUri}`;
-
-      microsoftTeams.authentication.authenticate({
-        url: loginUrl,
-        width: 600,
-        height: 535,
-        successCallback: (authCode) => {
-          console.log("✅ Login successful. Auth code:", authCode);
-          sessionStorage.setItem("authCode", authCode);
-          sessionStorage.setItem("tenantId", tenantId);
-          showEmbeddedUI(authCode);
-        },
-        failureCallback: (error) => {
-          console.error("❌ Login failed:", error);
-          alert("Login failed: " + error);
-        }
-      });
+    },
+    failureCallback: (error) => {
+      console.error("❌ Login failed:", error);
+      alert("Login failed: " + error);
     }
+  });
+}
+
 
     function showEmbeddedUI(authCode) {
       document.getElementById("loginForm").style.display = "none";
