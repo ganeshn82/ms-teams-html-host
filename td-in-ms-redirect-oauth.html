@@ -5,16 +5,12 @@
   <title>Talkdesk in Teams</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://teams.microsoft.com;">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 20px;
-      height: 100%;
-      width: 100%;
     }
     .container {
       max-width: 400px;
@@ -33,155 +29,59 @@
     }
   </style>
 </head>
-  
+
 <body>
   <div class="container" id="loginForm">
     <h2>Talkdesk Integration</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
-<button id="loginBtn">Login</button>
-
-
+    <button id="loginBtn">Login</button>
   </div>
-  <button onclick="logout()" style="margin-top: 20px;">Logout</button>
 
+  <button id="logoutBtn" style="margin-top: 20px;">Logout</button>
+
+  <iframe
+    id="td-emb-container"
+    title="Talkdesk Embedded"
+    src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html"
+    allow="microphone idle-detection *"
+    frameborder="0">
+  </iframe>
 
   <script>
     let tenantId = "";
 
-    microsoftTeams.app.initialize().then(() => {
-      console.log("Teams SDK initialized");
+    // ⏳ Wait until DOM and Teams SDK are ready
+    window.addEventListener("load", () => {
+      microsoftTeams.app.initialize().then(() => {
+        console.log("✅ Teams SDK initialized");
+
+        document.getElementById("loginBtn").onclick = startLogin;
+        document.getElementById("logoutBtn").onclick = logout;
+
+        const savedTenant = sessionStorage.getItem("tenantId");
+        const savedAuth = sessionStorage.getItem("authCode");
+
+        if (savedTenant && savedAuth) {
+          console.log("🔁 Session found, skipping login");
+          tenantId = savedTenant;
+          showEmbeddedUI(savedAuth);
+        } else {
+          console.log("🆕 No session found, showing login form");
+          document.getElementById("loginForm").style.display = "block";
+        }
+      });
     });
 
-  // ✅ [CHANGED]: Now passing saved authCode to showEmbeddedUI
-  window.addEventListener("load", () => {
-    const savedTenant = sessionStorage.getItem("tenantId");
-    const savedAuth = sessionStorage.getItem("authCode");
-
-    if (savedTenant && savedAuth) {
-      console.log("🔁 Session found, skipping login");
-      tenantId = savedTenant;
-      showEmbeddedUI(savedAuth);  // ✅ Pass savedAuth here
-    } else {
-      console.log("🆕 No session found, showing login form");
-      document.getElementById("loginForm").style.display = "block";
-
-
-    }
-  });
-    
-   
-    // ✅ Define globally so it's available at addEventListener time
-  const eventHandler = (event) => {
-    const tdEmbContainer = document.getElementById('td-emb-container');
-
-    // Validate origin
-   // const expectedOrigin = new URL(tdEmbContainer.src).origin;
-   // if (event.origin !== expectedOrigin) {
-   //   console.log('❌ Validation failed: unexpected origin', event.origin);
-  //    return;
-  //  }
-
-    console.log("✅ [custom integration] <<< event received:", event);
-    // You can add more handlers here
-  };
-
-  // ✅ Register listener once globally
-  window.addEventListener('message', eventHandler);
-
-    
-  function sendInitMessageToTD(authCodeFromLogin = null) {
-          console.log("sendInitMessageToTD: Entry");
-
-              
-          let tdEmbContainer = document.getElementById('td-emb-container');
-            console.log("sendInitMessageToTD: getElement");
-
-       const tdEmbContainer = document.getElementById('td-emb-container');
-
-    const authCode = authCodeFromLogin || sessionStorage.getItem("authCode");
-    const tenant = sessionStorage.getItem("tenantId");
-
-    const payload = {
-      url: window.location.origin,
-      int: 'msteams',
-      env: 'prd-us',
-      aid: '677b612f79c71e3ea18557c2',
-      view: 'workspace',
-      app: 'conversation',
-      auth: {
-        code: authCode,
-        tenant: tenant
-      }
-    };
-
-    console.log("📨 Sending postMessage to Talkdesk iframe with payload:", payload);
-
-    tdEmbContainer.contentWindow.postMessage({
-      action: 'init_td_embedded',
-      data: payload
-    }, "https://prd-cdn-talkdesk.talkdesk.com");
-    
-  /*   const eventHandler = (event) => {
-                          console.log("sendInitMessageToTD: handle events");
-
-          let tdEmbContainer = document.getElementById('td-emb-container');
-          // IMPORTANT: check the origin of the data!
-          // Validate if the events are coming from the TD Embedded iframe
-          if (event.origin != tdEmbContainer.src) {
-            console.log(' Validation failed, events are not coming from the TD Embedded iframe', event);
-              return;
-          }
-          // The data was sent from your iframe.
-          // Data sent with postMessage is stored in event.data
-          console.log("### [custom integration] <<< event received:", event);
-          // NOTE: Write here you custom code to handle the events
-      }; */
-      
-          console.log("sendInitMessageToTD: Done");
-      
-   }
-    
-function logout() {
-  sessionStorage.clear();
-  location.reload();
-}
-    
-   function showEmbeddedUI(authCode) {
-  document.getElementById("loginForm").style.display = "none";
-  const iframe = document.getElementById("td-emb-container");
-
-  // ✅ Make sure iframe is visible
-  iframe.style.display = "block";
-  iframe.style.height = "90vh";
-
-  // ✅ Log when iframe is loaded
-  iframe.onload = () => {
-    console.log("✅ Iframe loaded");
-  };
-
-  // ✅ Wait a bit before sending init message to avoid race condition
-  setTimeout(() => {
-    console.log("📨 Sending init_td_embedded message...");
-    sendInitMessageToTD(authCode);
-  }, 500);
-}
-
-     function startLogin() {
-        console.log("🔁 startLogin called");
-tenantId = document.getElementById("tenantUrl").value.trim();
+    function startLogin() {
+      console.log("🔁 startLogin called");
+      tenantId = document.getElementById("tenantUrl").value.trim();
       if (!tenantId) {
         alert("Please enter your tenant URL.");
         return;
       }
 
-       window.onload = () => {
-  document.getElementById("loginBtn").onclick = startLogin;
-  console.log("✅ Login button handler bound");
-};
-
       const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-popup.html");
-
       const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodedRedirectUri}`;
 
       microsoftTeams.authentication.authenticate({
@@ -189,59 +89,69 @@ tenantId = document.getElementById("tenantUrl").value.trim();
         width: 600,
         height: 535,
         successCallback: (authCode) => {
-          console.log("Login successful. Auth code:", authCode);
-          
-          // Store in session
+          console.log("✅ Login successful. Auth code:", authCode);
           sessionStorage.setItem("authCode", authCode);
           sessionStorage.setItem("tenantId", tenantId);
-
           showEmbeddedUI(authCode);
-          /*
-
-          // Hide login UI, show iframe
-          document.getElementById("loginForm").style.display = "none";
-          const iframe = document.getElementById("td-emb-container");
-          iframe.style.display = "block";
-          console.log("Setting the iframe as block");
-
-          // Initialize Talkdesk after iframe is ready
-          console.log("Iframe loaded, trying to send init message...");
-          sendInitMessageToTD(); */
         },
         failureCallback: (error) => {
-          console.error("Login failed:", error);
+          console.error("❌ Login failed:", error);
           alert("Login failed: " + error);
         }
       });
     }
-  
 
+    function showEmbeddedUI(authCode) {
+      document.getElementById("loginForm").style.display = "none";
+      const iframe = document.getElementById("td-emb-container");
+      iframe.style.display = "block";
 
-   
-  </script>
- <iframe 
-     id="td-emb-container" 
-     title="Talkdesk Embedded" 
-     src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html" 
-     allow="microphone idle-detection *"
-     frameborder="0">
-   </iframe>
-  
-  <!-- ✅ Add this script AFTER the iframe -->
-    <script>
-      // Detect if the page is inside an iframe (e.g., Teams)
-      if (window !== window.top) {
-        window.top.location.href = window.location.href; // Redirect top window
-      } else {
-        // Handle auth logic here (e.g., extract code/state from URL)
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        const state = params.get('state');
-        if (code && state) {
-          // Exchange code for token or proceed with auth
-          console.log('Auth code:', code);
+      iframe.onload = () => {
+        console.log("✅ Iframe loaded");
+      };
+
+      setTimeout(() => {
+        console.log("📨 Sending init_td_embedded message...");
+        sendInitMessageToTD(authCode);
+      }, 500);
+    }
+
+    function sendInitMessageToTD(authCodeFromLogin = null) {
+      const tdEmbContainer = document.getElementById('td-emb-container');
+      const authCode = authCodeFromLogin || sessionStorage.getItem("authCode");
+      const tenant = sessionStorage.getItem("tenantId");
+
+      const payload = {
+        url: window.location.origin,
+        int: 'msteams',
+        env: 'prd-us',
+        aid: '677b612f79c71e3ea18557c2',
+        view: 'workspace',
+        app: 'conversation',
+        auth: {
+          code: authCode,
+          tenant: tenant
         }
-      } 
-    </script>
+      };
+
+      tdEmbContainer.contentWindow.postMessage({
+        action: 'init_td_embedded',
+        data: payload
+      }, "https://prd-cdn-talkdesk.talkdesk.com");
+
+      console.log("✅ postMessage sent with payload", payload);
+    }
+
+    function logout() {
+      console.log("🔁 Logging out...");
+      sessionStorage.clear();
+      location.reload();
+    }
+
+    // 🛡️ Message listener
+    window.addEventListener("message", (event) => {
+      console.log("✅ Message from iframe:", event);
+    });
+  </script>
 </body>
 </html>
