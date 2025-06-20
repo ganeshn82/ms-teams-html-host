@@ -50,20 +50,20 @@
       console.log("Teams SDK initialized");
     });
 
-    
-window.addEventListener("load", () => {
-  const savedTenant = sessionStorage.getItem("tenantId");
-  const savedAuth = sessionStorage.getItem("authCode");
+  // ✅ [CHANGED]: Now passing saved authCode to showEmbeddedUI
+  window.addEventListener("load", () => {
+    const savedTenant = sessionStorage.getItem("tenantId");
+    const savedAuth = sessionStorage.getItem("authCode");
 
-  if (savedTenant && savedAuth) {
-    console.log("🔁 Session found, skipping login");
-    tenantId = savedTenant;
-    showEmbeddedUI();
-  } else {
-    console.log("🆕 No session found, showing login form");
-    document.getElementById("loginForm").style.display = "block";
-  }
-});
+    if (savedTenant && savedAuth) {
+      console.log("🔁 Session found, skipping login");
+      tenantId = savedTenant;
+      showEmbeddedUI(savedAuth);  // ✅ Pass savedAuth here
+    } else {
+      console.log("🆕 No session found, showing login form");
+      document.getElementById("loginForm").style.display = "block";
+    }
+  });
     
    
     // ✅ Define globally so it's available at addEventListener time
@@ -85,20 +85,38 @@ window.addEventListener("load", () => {
   window.addEventListener('message', eventHandler);
 
     
-  function sendInitMessageToTD() {
+  function sendInitMessageToTD(authCodeFromLogin = null) {
           console.log("sendInitMessageToTD: Entry");
 
-      const sendEventToTD = (action, data) => {
               
           let tdEmbContainer = document.getElementById('td-emb-container');
             console.log("sendInitMessageToTD: getElement");
 
-          // Send event to TD Embedded iframe
-          //tdEmbContainer.contentWindow.postMessage({ action, data }, tdEmbContainer.src);
-          tdEmbContainer.contentWindow.postMessage({ action, data }, "https://prd-cdn-talkdesk.talkdesk.com");
+       const tdEmbContainer = document.getElementById('td-emb-container');
 
+    const authCode = authCodeFromLogin || sessionStorage.getItem("authCode");
+    const tenant = sessionStorage.getItem("tenantId");
+
+    const payload = {
+      url: window.location.origin,
+      int: 'msteams',
+      env: 'prd-us',
+      aid: '677b612f79c71e3ea18557c2',
+      view: 'workspace',
+      app: 'conversation',
+      auth: {
+        code: authCode,
+        tenant: tenant
       }
-      
+    };
+
+    console.log("📨 Sending postMessage to Talkdesk iframe with payload:", payload);
+
+    tdEmbContainer.contentWindow.postMessage({
+      action: 'init_td_embedded',
+      data: payload
+    }, "https://prd-cdn-talkdesk.talkdesk.com");
+    
   /*   const eventHandler = (event) => {
                           console.log("sendInitMessageToTD: handle events");
 
@@ -115,25 +133,16 @@ window.addEventListener("load", () => {
           // NOTE: Write here you custom code to handle the events
       }; */
       
-          console.log("sendInitMessageToTD: window.onload");
-
-          
-          // Init
-          sendEventToTD('init_td_embedded', {
-              url: window.location.origin,
-              int: 'msteams',
-              env: 'prd-us',
-              aid: '677b612f79c71e3ea18557c2',
-             view: 'workspace'
-          });
+          console.log("sendInitMessageToTD: Done");
       
    }
+    
 function logout() {
   sessionStorage.clear();
   location.reload();
 }
     
-   function showEmbeddedUI() {
+   function showEmbeddedUI(authCode) {
   document.getElementById("loginForm").style.display = "none";
   const iframe = document.getElementById("td-emb-container");
 
@@ -149,7 +158,7 @@ function logout() {
   // ✅ Wait a bit before sending init message to avoid race condition
   setTimeout(() => {
     console.log("📨 Sending init_td_embedded message...");
-    sendInitMessageToTD();
+    sendInitMessageToTD(authCode);
   }, 500);
 }
 
@@ -176,7 +185,7 @@ function logout() {
           sessionStorage.setItem("authCode", authCode);
           sessionStorage.setItem("tenantId", tenantId);
 
-          showEmbeddedUI();
+          showEmbeddedUI(authCode);
           /*
 
           // Hide login UI, show iframe
