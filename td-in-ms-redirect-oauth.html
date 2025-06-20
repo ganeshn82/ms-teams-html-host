@@ -66,8 +66,7 @@
       console.log("🆕 No session found, showing login form");
       document.getElementById("loginForm").style.display = "block";
 
-    // ✅ Now the DOM is ready, attach the handler
-    document.getElementById("loginBtn").onclick = startLogin;
+
     }
   });
     
@@ -174,7 +173,9 @@ function logout() {
         alert("Please enter your tenant URL.");
         return;
       }
-
+    // ✅ Now the DOM is ready, attach the handler
+    document.getElementById("loginBtn").onclick = startLogin;
+       
       const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-popup.html");
 
       const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodedRedirectUri}`;
