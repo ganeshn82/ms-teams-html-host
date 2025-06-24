@@ -38,30 +38,19 @@
     <button id="loginBtn">Login</button>
   </div>
 
-  <button class="container"id="logoutBtn">Logout</button>
+  <button class="container" id="logoutBtn">Logout</button>
 
-<!--  <iframe
-    id="td-emb-container"
-    title="Talkdesk Embedded1"
-    src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html"
-    allow="microphone idle-detection"
-    frameborder="0">
-  </iframe> -->
- 
   <iframe
-  id="td-emb-container"
-  title="Talkdesk Embedded"
-  allow="microphone idle-detection"
-  frameborder="0"
-  style="width: 100%; height: 90vh; display: none;">
-</iframe>
+    id="td-emb-container"
+    title="Talkdesk Embedded"
+    allow="microphone idle-detection"
+    frameborder="0"
+    style="width: 100%; height: 90vh; display: none;">
+  </iframe>
 
-
-  
   <script>
     let tenantId = "";
 
-    // ⏳ Wait until DOM and Teams SDK are ready
     window.addEventListener("load", () => {
       microsoftTeams.app.initialize().then(() => {
         console.log("✅ Teams SDK initialized");
@@ -75,103 +64,65 @@
         if (savedTenant && savedAuth) {
           console.log("🔁 Session found, skipping login");
           tenantId = savedTenant;
-          showEmbeddedUI(savedAuth);
+          showEmbeddedUI();
         } else {
           console.log("🆕 No session found, showing login form");
           document.getElementById("loginForm").style.display = "block";
         }
       });
     });
-async function exchangeCodeForToken(authCode, tenant) {
-  const clientId = 'b243bbd4f95c4d37ba8a09a485fae07d';  // 🔁 Replace with your actual client_id
-  const redirectUri = 'https://ganeshn82.github.io/ms-teams-html-host/login-popup.html';
 
-  const tokenUrl = `https://${tenant}.talkdeskid.com/oauth/token`;
+    async function startLogin() {
+      console.log("🔁 startLogin called");
+      tenantId = document.getElementById("tenantUrl").value.trim();
+      if (!tenantId) {
+        alert("Please enter your tenant URL.");
+        return;
+      }
 
-  const response = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      code: authCode
-    })
-  });
+      const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html";
+      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodeURIComponent(redirectUri)}`;
 
-  const json = await response.json();
-  if (!response.ok) {
-    throw new Error(json.error_description || 'Token exchange failed');
-  }
+      microsoftTeams.authentication.authenticate({
+        url: loginUrl,
+        width: 600,
+        height: 535,
+        successCallback: (authCode) => {
+          console.log("✅ Login successful. Auth code:", authCode);
+          console.log("✅ Login successful. tenantId:", tenantId);
 
-  console.log("🎫 Token response:", json);
-  return json.access_token;
-}
+          sessionStorage.setItem("authCode", authCode);
+          sessionStorage.setItem("tenantId", tenantId);
 
-async function startLogin() {
-  console.log("🔁 startLogin called");
-  tenantId = document.getElementById("tenantUrl").value.trim();
-  if (!tenantId) {
-    alert("Please enter your tenant URL.");
-    return;
-  }
-
-  const encodedRedirectUri = encodeURIComponent("https://ganeshn82.github.io/ms-teams-html-host/login-popup.html");
-  const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodedRedirectUri}`;
-
-  microsoftTeams.authentication.authenticate({
-    url: loginUrl,
-    width: 600,
-    height: 535,
-    successCallback: async (authCode) => {
-      console.log("✅ Login successful. Auth code:", authCode);
-      console.log("✅ Login successful. tenantId:", tenantId);
-
-      sessionStorage.setItem("authCode", authCode);
-      sessionStorage.setItem("tenantId", tenantId);
-
-     // const accessToken = await exchangeCodeForToken(authCode, tenantId);
-      //sessionStorage.setItem("accessToken", accessToken);
-      
-      //showEmbeddedUI(accessToken);  // ✅ Pass token
-      showEmbeddedUI(authCode); // ✅ pass code, not token
-    },
-    failureCallback: (error) => {
-      console.error("❌ Login failed:", error);
-      alert("Login failed: " + error);
+          showEmbeddedUI();
+        },
+        failureCallback: (error) => {
+          console.error("❌ Login failed:", error);
+          alert("Login failed: " + error);
+        }
+      });
     }
-  });
-}
 
+    function showEmbeddedUI() {
+      document.getElementById("loginForm").style.display = "none";
 
-    function showEmbeddedUI(authCode) {
-  document.getElementById("loginForm").style.display = "none";
+      const authCode = sessionStorage.getItem("authCode");
+      const iframe = document.getElementById("td-emb-container");
 
-  const authCode = sessionStorage.getItem("authCode");
-  const iframe = document.getElementById("td-emb-container");
+      iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?code=${authCode}&state=xyz`;
+      iframe.style.display = "block";
 
-  // ✅ Set src with code and state
-  iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?code=${authCode}&state=xyz`;
-  iframe.style.display = "block";
+      iframe.onload = () => {
+        console.log("✅ Iframe loaded");
+        setTimeout(() => {
+          sendInitMessageToTD();
+        }, 500);
+      };
+    }
 
-  iframe.onload = () => {
-    console.log("✅ Iframe loaded");
-    setTimeout(() => {
-      sendInitMessageToTD(); // No auth param needed
-    }, 500);
-  };
-}
-
-
-    function sendInitMessageToTD(authCodeFromLogin = null) {
+    function sendInitMessageToTD() {
       const tdEmbContainer = document.getElementById('td-emb-container');
-      const authCode = authCodeFromLogin || sessionStorage.getItem("authCode");
       const tenant = sessionStorage.getItem("tenantId");
-      console.log("Passing Auth code:", authCode);
-      console.log("Passing tenantId:", tenantId);
-      const authToken = authCodeFromLogin || sessionStorage.getItem("accessToken");  // ✅ not authCode
 
       const payload = {
         url: window.location.origin,
@@ -179,22 +130,16 @@ async function startLogin() {
         env: 'prd-us',
         aid: '677b612f79c71e3ea18557c2',
         view: 'workspace',
-        app: 'conversation',
-     //   auth: {
-       //   token: authToken,
-       //   tenant: tenant
-       // }
+        app: 'conversation'
       };
 
-
       const origin = new URL(tdEmbContainer.src).origin;
-  tdEmbContainer.contentWindow.postMessage({
-    action: 'init_td_embedded',
-    data: payload
-  }, origin);
+      tdEmbContainer.contentWindow.postMessage({
+        action: 'init_td_embedded',
+        data: payload
+      }, origin);
 
-  console.log("✅ postMessage sent with payload", payload);
-   
+      console.log("✅ postMessage sent with payload", payload);
     }
 
     function logout() {
@@ -203,7 +148,6 @@ async function startLogin() {
       location.reload();
     }
 
-    // 🛡️ Message listener
     window.addEventListener("message", (event) => {
       console.log("✅ Message from iframe:", event);
     });
