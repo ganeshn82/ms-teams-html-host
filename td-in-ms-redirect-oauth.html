@@ -117,6 +117,7 @@ async function startLogin() {
     height: 535,
     successCallback: async (authCode) => {
       console.log("✅ Login successful. Auth code:", authCode);
+      console.log("✅ Login successful. tenantId:", tenantId);
 
       sessionStorage.setItem("authCode", authCode);
       sessionStorage.setItem("tenantId", tenantId);
@@ -150,7 +151,9 @@ async function startLogin() {
       const tdEmbContainer = document.getElementById('td-emb-container');
       const authCode = authCodeFromLogin || sessionStorage.getItem("authCode");
       const tenant = sessionStorage.getItem("tenantId");
-
+      console.log("Passing Auth code:", authCode);
+      console.log("Passing tenantId:", tenantId);
+      
       const payload = {
         url: window.location.origin,
         int: 'msteams',
