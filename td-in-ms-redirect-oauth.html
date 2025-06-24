@@ -153,7 +153,7 @@ async function startLogin() {
 
     function sendInitMessageToTD(authCodeFromLogin = null) {
       const tdEmbContainer = document.getElementById('td-emb-container');
-    //  const authCode = authCodeFromLogin || sessionStorage.getItem("authCode");
+      const authCode = authCodeFromLogin || sessionStorage.getItem("authCode");
       const tenant = sessionStorage.getItem("tenantId");
       console.log("Passing Auth code:", authCode);
       console.log("Passing tenantId:", tenantId);
