@@ -40,14 +40,24 @@
 
   <button class="container"id="logoutBtn">Logout</button>
 
-  <iframe
+<!--  <iframe
     id="td-emb-container"
     title="Talkdesk Embedded1"
     src="https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html"
     allow="microphone idle-detection"
     frameborder="0">
-  </iframe>
+  </iframe> -->
+ 
+  <iframe
+  id="td-emb-container"
+  title="Talkdesk Embedded"
+  allow="microphone idle-detection"
+  frameborder="0"
+  style="width: 100%; height: 90vh; display: none;">
+</iframe>
 
+
+  
   <script>
     let tenantId = "";
 
@@ -137,19 +147,23 @@ async function startLogin() {
 
 
     function showEmbeddedUI(authCode) {
-      document.getElementById("loginForm").style.display = "none";
-      const iframe = document.getElementById("td-emb-container");
-      iframe.style.display = "block";
+  document.getElementById("loginForm").style.display = "none";
 
-      iframe.onload = () => {
-        console.log("✅ Iframe loaded");
-      };
+  const authCode = sessionStorage.getItem("authCode");
+  const iframe = document.getElementById("td-emb-container");
 
-      setTimeout(() => {
-        console.log("📨 Sending init_td_embedded message...");
-        sendInitMessageToTD(authCode);
-      }, 500);
-    }
+  // ✅ Set src with code and state
+  iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?code=${authCode}&state=xyz`;
+  iframe.style.display = "block";
+
+  iframe.onload = () => {
+    console.log("✅ Iframe loaded");
+    setTimeout(() => {
+      sendInitMessageToTD(); // No auth param needed
+    }, 500);
+  };
+}
+
 
     function sendInitMessageToTD(authCodeFromLogin = null) {
       const tdEmbContainer = document.getElementById('td-emb-container');
