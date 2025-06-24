@@ -122,11 +122,11 @@ async function startLogin() {
       sessionStorage.setItem("authCode", authCode);
       sessionStorage.setItem("tenantId", tenantId);
 
-      const accessToken = await exchangeCodeForToken(authCode, tenantId);
-      sessionStorage.setItem("accessToken", accessToken);
+     // const accessToken = await exchangeCodeForToken(authCode, tenantId);
+      //sessionStorage.setItem("accessToken", accessToken);
       
-      showEmbeddedUI(accessToken);  // ✅ Pass token
-      //showEmbeddedUI(authCode); // ✅ pass code, not token
+      //showEmbeddedUI(accessToken);  // ✅ Pass token
+      showEmbeddedUI(authCode); // ✅ pass code, not token
     },
     failureCallback: (error) => {
       console.error("❌ Login failed:", error);
