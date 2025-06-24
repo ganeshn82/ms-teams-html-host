@@ -73,7 +73,7 @@
       });
     });
 async function exchangeCodeForToken(authCode, tenant) {
-  const clientId = 'YOUR_CLIENT_ID';  // 🔁 Replace with your actual client_id
+  const clientId = 'b243bbd4f95c4d37ba8a09a485fae07d';  // 🔁 Replace with your actual client_id
   const redirectUri = 'https://ganeshn82.github.io/ms-teams-html-host/login-popup.html';
 
   const tokenUrl = `https://${tenant}.talkdeskid.com/oauth/token`;
@@ -121,8 +121,12 @@ async function startLogin() {
 
       sessionStorage.setItem("authCode", authCode);
       sessionStorage.setItem("tenantId", tenantId);
+
+      const accessToken = await exchangeCodeForToken(authCode, tenantId);
+      sessionStorage.setItem("accessToken", accessToken);
       
-      showEmbeddedUI(authCode); // ✅ pass code, not token
+      showEmbeddedUI(accessToken);  // ✅ Pass token
+      //showEmbeddedUI(authCode); // ✅ pass code, not token
     },
     failureCallback: (error) => {
       console.error("❌ Login failed:", error);
@@ -149,11 +153,12 @@ async function startLogin() {
 
     function sendInitMessageToTD(authCodeFromLogin = null) {
       const tdEmbContainer = document.getElementById('td-emb-container');
-      const authCode = authCodeFromLogin || sessionStorage.getItem("authCode");
+    //  const authCode = authCodeFromLogin || sessionStorage.getItem("authCode");
       const tenant = sessionStorage.getItem("tenantId");
       console.log("Passing Auth code:", authCode);
       console.log("Passing tenantId:", tenantId);
-      
+      const authToken = authCodeFromLogin || sessionStorage.getItem("accessToken");  // ✅ not authCode
+
       const payload = {
         url: window.location.origin,
         int: 'msteams',
@@ -162,17 +167,20 @@ async function startLogin() {
         view: 'workspace',
         app: 'conversation',
         auth: {
-          code: authCode,
+          token: authToken,
           tenant: tenant
         }
       };
 
-      tdEmbContainer.contentWindow.postMessage({
-        action: 'init_td_embedded',
-        data: payload
-      }, "https://prd-cdn-talkdesk.talkdesk.com");
 
-      console.log("✅ postMessage sent with payload", payload);
+      const origin = new URL(tdEmbContainer.src).origin;
+  tdEmbContainer.contentWindow.postMessage({
+    action: 'init_td_embedded',
+    data: payload
+  }, origin);
+
+  console.log("✅ postMessage sent with payload", payload);
+   
     }
 
     function logout() {
