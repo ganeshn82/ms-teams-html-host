@@ -72,38 +72,37 @@
       });
     });
 
-    async function startLogin() {
-      console.log("🔁 startLogin called");
-      tenantId = document.getElementById("tenantUrl").value.trim();
-      if (!tenantId) {
-        alert("Please enter your tenant URL.");
-        return;
-      }
+  async function startLogin() {
+  console.log("🔁 startLogin called");
+  tenantId = document.getElementById("tenantUrl").value.trim();
+  if (!tenantId) {
+    alert("Please enter your tenant URL.");
+    return;
+  }
 
-      const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html";
-      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodeURIComponent(redirectUri)}`;
+  const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html";
+  const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodeURIComponent(redirectUri)}`;
 
-      microsoftTeams.authentication.authenticate({
-        url: loginUrl,
-        width: 600,
-        height: 535,
-        successCallback: (authCode) => {
-          console.log("✅ Login successful. Auth code:", authCode);
-          console.log("✅ Login successful. tenantId:", tenantId);
+  microsoftTeams.authentication.authenticate({
+    url: loginUrl,
+    width: 600,
+    height: 535,
+    successCallback: (accessToken) => {
+      console.log("✅ Login successful. tenantId:", tenantId);
+      console.log("✅ Access token:", accessToken);
 
-          sessionStorage.setItem("authCode", authCode);
-          sessionStorage.setItem("tenantId", tenantId);
-          sessionStorage.setItem("accessToken", accessToken);
+      sessionStorage.setItem("tenantId", tenantId);
+      sessionStorage.setItem("accessToken", accessToken);
 
-
-          showEmbeddedUI(accessToken);
-        },
-        failureCallback: (error) => {
-          console.error("❌ Login failed:", error);
-          alert("Login failed: " + error);
-        }
-      });
+      showEmbeddedUI(accessToken);
+    },
+    failureCallback: (error) => {
+      console.error("❌ Login failed:", error);
+      alert("Login failed: " + error);
     }
+  });
+}
+
 
     function showEmbeddedUIOld() {
       document.getElementById("loginForm").style.display = "none";
