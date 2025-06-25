@@ -75,3 +75,25 @@ HTTP Requests
 18:20:48.967 IST POST    /exchange-code         200 OK
 
 5. Add the app to Ms Teams app and test.
+
+===================== Source files ====================
+1. td-in-ms-redirect-oauth.html
+    📍 Teams Tab Entry Point
+       Contains the main UI with login button and embedded Talkdesk iframe
+       Initializes Microsoft Teams SDK and triggers popup-based OAuth login
+       Hosts the iframe for Talkdesk Embedded UI
+       Calls microsoftTeams.authentication.authenticate(...)
+
+✅ 2. login-start.html
+      📍 OAuth Redirector to Identity Provider
+      Gets tenant and redirectUri from query params
+      Redirects user to Talkdesk OAuth endpoint (/authorize?client_id=...)
+      This is the popup window that opens on login button click
+
+✅ 3. login-popup.html (sometimes you referred to it as login-end.html)
+
+    📍 OAuth Callback Handler
+    Loaded after Talkdesk redirects back with ?code=...&state=...
+    Calls your backend (e.g. via ngrok or hosted server) to exchange code for access_token
+    Uses postMessage to send { type: 'td-auth-success', accessToken, tenant } back to the main window (i.e., td-in-ms-redirect-oauth.html)
+
