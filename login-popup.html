@@ -29,6 +29,7 @@
         })
         .then(res => res.json())
         .then(data => {
+          console.log("🔍 Received from backend:", data); // Add this
           if (data.access_token) {
             console.log("✅ notifySuccess with token");
             microsoftTeams.authentication.notifySuccess(data.access_token); // ✅ token sent back to tab
