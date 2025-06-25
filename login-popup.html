@@ -13,13 +13,48 @@
       const code = params.get("code");
       const error = params.get("error");
 
+<script>
+  const ngrokUrl = "https://abc123.ngrok.io"; // 🔁 Replace with your actual ngrok HTTPS URL
+
+  microsoftTeams.app.initialize().then(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const tenant = sessionStorage.getItem("tenantId"); // 🔁 Set this earlier in tab or pass via state param
+    const error = params.get("error");
+
+    if (error) {
+      microsoftTeams.authentication.notifyFailure(error);
+    } else if (code && tenant) {
+      fetch(`${ngrokUrl}/exchange-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, tenant })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.access_token) {
+          microsoftTeams.authentication.notifySuccess(data.access_token); // ✅ Send token to tab
+        } else {
+          microsoftTeams.authentication.notifyFailure("Token not received");
+        }
+      })
+      .catch(err => {
+        microsoftTeams.authentication.notifyFailure(err.message || "Fetch failed");
+      });
+    } else {
+      microsoftTeams.authentication.notifyFailure("Missing code or tenant");
+    }
+  });
+
+
+      /*
       if (error) {
         microsoftTeams.authentication.notifyFailure(error);
       } else if (code) {
         microsoftTeams.authentication.notifySuccess(code);
       } else {
         microsoftTeams.authentication.notifyFailure("No auth code found");
-      }
+      } */
     });
   </script>
 </body>
