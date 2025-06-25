@@ -38,9 +38,9 @@
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
     <button id="loginBtn">Login</button>
+    <button class="container" id="logoutBtn">Logout</button> 
   </div>
 
-  <!-- <button class="container" id="logoutBtn">Logout</button> -->
 
   <iframe
     id="td-emb-container"
@@ -58,7 +58,8 @@
         console.log("✅ Teams SDK initialized");
 
          document.getElementById("loginBtn").onclick = startLogin;
-      //  document.getElementById("logoutBtn").onclick = logout;
+        document.getElementById("logoutBtn").onclick = logout;
+        
     const savedTenant = sessionStorage.getItem("tenantId");
     const savedAuth = sessionStorage.getItem("accessToken"); // ✅ fixed
 
