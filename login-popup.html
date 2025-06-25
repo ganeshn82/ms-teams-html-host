@@ -13,7 +13,9 @@
     microsoftTeams.app.initialize().then(() => {
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
-      const tenant = sessionStorage.getItem("tenantId"); // ✅ should already be stored in tab before opening popup
+     // const tenant = sessionStorage.getItem("tenantId"); // ✅ should already be stored in tab before opening popup
+        const tenant = params.get("state"); // ✅ state = tenant passed earlier
+
       const error = params.get("error");
 
       if (error) {
