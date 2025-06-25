@@ -40,7 +40,7 @@
     <button id="loginBtn">Login</button>
   </div>
 
-  <button class="container" id="logoutBtn">Logout</button>
+  <!-- <button class="container" id="logoutBtn">Logout</button> -->
 
   <iframe
     id="td-emb-container"
@@ -57,16 +57,8 @@
       microsoftTeams.app.initialize().then(() => {
         console.log("✅ Teams SDK initialized");
 
-        // ✅ Add this to satisfy Teams tab lifecycle
-        if (microsoftTeams.pages?.config?.registerOnSaveHandler) {
-          microsoftTeams.pages.config.registerOnSaveHandler((saveEvent) => {
-            console.log("🔧 registerOnSaveHandler called");
-            saveEvent.notifySuccess();
-          });
-        }
-
-        document.getElementById("loginBtn").onclick = startLogin;
-        document.getElementById("logoutBtn").onclick = logout;
+         document.getElementById("loginBtn").onclick = startLogin;
+      //  document.getElementById("logoutBtn").onclick = logout;
 
         const savedTenant = sessionStorage.getItem("tenantId");
         const savedAuth = sessionStorage.getItem("authCode");
