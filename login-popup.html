@@ -30,6 +30,7 @@
         .then(res => res.json())
         .then(data => {
           if (data.access_token) {
+            console.log("✅ notifySuccess with token");
             microsoftTeams.authentication.notifySuccess(data.access_token); // ✅ token sent back to tab
           } else {
             microsoftTeams.authentication.notifyFailure("Token not received");
