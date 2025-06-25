@@ -60,11 +60,13 @@
 
         const savedTenant = sessionStorage.getItem("tenantId");
         const savedAuth = sessionStorage.getItem("authCode");
+        const savedAuth = sessionStorage.getItem("accessToken"); // ✅ Fix: was authCode
+
 
         if (savedTenant && savedAuth) {
           console.log("🔁 Session found, skipping login");
           tenantId = savedTenant;
-          showEmbeddedUI();
+          showEmbeddedUI(savedAuth); // ✅ Pass access token
         } else {
           console.log("🆕 No session found, showing login form");
           document.getElementById("loginForm").style.display = "block";
