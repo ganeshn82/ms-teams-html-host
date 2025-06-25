@@ -93,8 +93,10 @@
 
           sessionStorage.setItem("authCode", authCode);
           sessionStorage.setItem("tenantId", tenantId);
+          sessionStorage.setItem("accessToken", accessToken);
 
-          showEmbeddedUI();
+
+          showEmbeddedUI(accessToken);
         },
         failureCallback: (error) => {
           console.error("❌ Login failed:", error);
@@ -103,7 +105,7 @@
       });
     }
 
-    function showEmbeddedUI() {
+    function showEmbeddedUIOld() {
       document.getElementById("loginForm").style.display = "none";
 
       const authCode = sessionStorage.getItem("authCode");
@@ -119,8 +121,22 @@
         }, 500);
       };
     }
+function showEmbeddedUI(accessToken) {
+  document.getElementById("loginForm").style.display = "none";
+  const iframe = document.getElementById("td-emb-container");
+  iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html`;
+  iframe.style.display = "block";
 
-    function sendInitMessageToTD() {
+  iframe.onload = () => {
+    console.log("✅ Iframe loaded");
+    setTimeout(() => {
+      sendInitMessageToTD(accessToken);
+    }, 500);
+  };
+}
+
+    
+    function sendInitMessageToTD(token) {
       const tdEmbContainer = document.getElementById('td-emb-container');
       const tenant = sessionStorage.getItem("tenantId");
 
@@ -130,7 +146,10 @@
         env: 'prd-us',
         aid: '677b612f79c71e3ea18557c2',
         view: 'workspace',
-        app: 'conversation'
+        auth: {
+        token: token,
+        tenant: tenant
+          }
       };
 
       const origin = new URL(tdEmbContainer.src).origin;
