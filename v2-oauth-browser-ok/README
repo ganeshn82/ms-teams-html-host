@@ -1,0 +1,77 @@
+1. Register the app in Azure portal, get the UUID.
+3. Create an app and complete the app manifest, logo, etc. in https://dev.teams.microsoft.com/
+3. Approve the app from https://admin.teams.microsoft.com/policies/manage-apps
+4. Setup local backend server to convert the received code to access token: (steps below)
+
+++++++++++++++++++++++++ SETUP START ---------------
+ganesh@IN-200506-MBP24M4P ~ % npm init -y
+
+ganesh@IN-200506-MBP24M4P ~ % npm install express node-fetch
+
+
+ganesh@IN-200506-MBP24M4P ~ % ngrok config add-authtoken 2yzAaRXzGcDUeTZ0KG4c8QkPXCd_2X12LwXePHVia2Fc7PqsE
+zsh: command not found: ngrok
+ganesh@IN-200506-MBP24M4P ~ % 
+
+
+ganesh@IN-200506-MBP24M4P ~ % npm install -g ngrok
+
+
+added 44 packages in 660ms
+
+9 packages are looking for funding
+  run `npm fund` for details
+ganesh@IN-200506-MBP24M4P ~ % 
+ganesh@IN-200506-MBP24M4P ~ % npm install cors
+++++++++++++++++++++++++ SETUP COMPLETE ---------------
+
+
+1. Run server.js locally in laptop
+---------------------------------
+ganesh@IN-200506-MBP24M4P test-server % node server.js 
+🚀 Server running at http://localhost:3000
+🔔 Received /exchange-code call
+📥 Payload received: {
+  code: 'OTBiZTU3Nzc1MTcxNDcyM2IwOTViZjFiODFiYjhkMDB8UFA3RnR5aG44R2NOZHpLMFNENWhYRTEzODFEcjI2TlpnaGhtVHRzWHU2TDczaUNVcC1lLXN2YzVQOGlJTDRtSFZiY1duVzVNWE9jUktPZ0V6WUhOUWc',
+  tenant: 'ucdirectoryprd'
+}
+✅ Token received: {
+  access_token: 'eyJraWQiOiIxYWI2YjBhNjAxNTY0MmY4YjA5MWM3MjE1MWIxMGQ5MCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJodHRwczovL3d3dy50YWxrZGVza2lkLmNvbSIsImF1ZCI6Imh0dHBzOi8vYXBpLnRhbGtkZXNrYXBwLmNvbSIsImV4cCI6MTc1MDg0MzYzMywibmJmIjoxNzUwODQzMDMzLCJpYXQiOjE3NTA4NDMwMzMsImp0aSI6ImJhNzJiY2QyNWU4NDQ3MWY4NTRjNzk4MGEwZDc4YWViIiwiY2lkIjoiYjI0M2JiZDRmOTVjNGQzN2JhOGEwOWE0ODVmYWUwN2QiLCJndHkiOiJhdXRob3JpemF0aW9uX2NvZGUiLCJzY3AiOlsiYWNjb3VudC1iaWxsaW5nOm1hbmFnZSIsImFjY291bnQtYmlsbGluZzpyZWFkIiwiYWNjb3VudC1jdXN0b20tZmllbGRzOnJlYWQiLCJhY2NvdW50LWJ1c2luZXNzLWhvdXJzOnJlYWQiLCJhY2NvdW50LWN1c3RvbS1zdGF0dXM6cmVhZCIsImFjY291bnQtZmF2b3JpdGVzOnJlYWQiLCJhY2NvdW50LWJ1Y2tldHM6cmVhZCIsImFjY291bnQtdXNhZ2Utc3VtbWFyeTpyZWFkIiwiYWNjb3VudC11c2FnZS1wcm9kdWN0czpyZWFkIiwiYWNjb3VudC11Yy1zdGF0dXM6cmVhZCIsImFjY291bnQtc3RvcmFnZXM6d3JpdGUiLCJjYXNlLXRhZ3MtbWFuYWdlOnJlYWQiLCJjYXNlLXNsYS10YXJnZXRzOndyaXRlIiwiY2FzZS1zbGEtdGFyZ2V0czpyZWFkIiwiY2FzZS1zbGEtcG9saWNpZXM6d3JpdGUiXSwicmxtIjoiTUFJTiIsImFpZCI6IjYyOTRkMGU0MDkzNGI4NjQ3Mjk0NTFlMyIsImFjYyI6InVjZGlyZWN0b3J5cHJkIiwicHNuIjoiQ1VTVE9NRVIiLCJyZWciOiJ1cy1lYXN0LTEiLCJtdGxzIjpmYWxzZSwiY2VydGlmaWNhdGVzIjpbXSwic3ViIjoiZWI1YTIyMzNmODA0NGM2N2JiZjBkMWMzYjM5ZTU2YzQiLCJ1c3IiOiJnYW5lc2gubmF0YXJhamFuQHRhbGtkZXNrLmNvbSIsInVpZCI6IjY3N2I2MTJmNzljNzFlM2VhMTg1NTdjMiIsInNpZCI6IjRhMTY4NjEzZTg0ZjQ0ZmFhM2NhMmU2ZWY5ZmU1MjljIn0.WL_VXBPmm1dk2Tz2q9Z7E2Qa2Gwyqc499PvDQlFWimejxZ7LJWpXuLYQVzHQ76PD_U7xribndnXzcPoADt03Jw',
+  token_type: 'Bearer',
+  refresh_token: 'Zjk0NDliMTk4MDU0NDI0ZDg3ZTVlYmY1OTVjNjEzMjl8TWVqdWhHNE1pQjFKTkNrNXhoS3lfRHVIbE9ZYTBhM2VlVkhzbmczdzJkRThydTNlZ1ZnV3Z4aXZQNkxLTGlVN3hQUm4yM0wtRnBsVVc5NUV6TFFfYWc',
+  expires_in: 599,
+  scope: 'account-billing:manage account-billing:read account-custom-fields:read account-business-hours:read account-custom-status:read account-favorites:read account-buckets:read account-usage-summary:read account-usage-products:read account-uc-status:read account-storages:write case-tags-manage:read case-sla-targets:write case-sla-targets:read case-sla-policies:write',
+  sid: '4a168613e84f44faa3ca2e6ef9fe529c'
+}
+
+2. Run ngrok to expose this as an URL
+--------------------------------------
+ganesh@IN-200506-MBP24M4P ~ % npx ngrok http 3000
+
+ngrok                                                           (Ctrl+C to quit)
+
+🏃➡️ The Go SDK has reached v2—now simpler, more streamlined, and way more power
+
+Session Status                online
+Account                       Ganesh Raaja N (Plan: Free)
+Version                       3.23.2
+Region                        India (in)
+Latency                       27ms
+Web Interface                 http://127.0.0.1:4040
+Forwarding                    https://c245-49-207-192-228.ngrok-free.app -> http
+
+Connections                   ttl     opn     rt1     rt5     p50     p90
+                              34      0       0.00    0.00    7.10    7.37
+
+HTTP Requests
+-------------
+
+18:22:03.409 IST POST    /exchange-code         200 OK
+18:22:03.352 IST OPTIONS /exchange-code         204 No Content
+18:21:49.198 IST POST    /exchange-code         200 OK
+18:21:49.141 IST OPTIONS /exchange-code         204 No Content
+18:21:26.937 IST POST    /exchange-code         200 OK
+18:21:26.853 IST OPTIONS /exchange-code         204 No Content
+18:20:48.967 IST POST    /exchange-code         200 OK
+
+5. Add the app to Ms Teams app and test.
