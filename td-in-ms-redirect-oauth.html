@@ -81,8 +81,8 @@
         }
       });
     });
-
-  async function startLogin() {
+/*
+  async function startLoginOld() {
   console.log("🔁 startLogin called");
   tenantId = document.getElementById("tenantUrl").value.trim();
   if (!tenantId) {
@@ -92,6 +92,7 @@
 
   const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html";
   const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodeURIComponent(redirectUri)}`;
+await microsoftTeams.app.getContext();
 
   microsoftTeams.authentication.authenticate({
     url: loginUrl,
@@ -112,6 +113,47 @@
     }
   });
 }
+*/
+    async function startLogin() {
+  console.log("🔁 startLogin called");
+  tenantId = document.getElementById("tenantUrl").value.trim();
+  if (!tenantId) {
+    alert("Please enter your tenant URL.");
+    return;
+  }
+
+  const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html";
+  const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodeURIComponent(redirectUri)}`;
+
+  try {
+    const context = await microsoftTeams.app.getContext();  // ✅ required inside Teams
+    console.log("📍 Teams context:", context);
+  } catch (err) {
+    console.error("❌ Failed to get context:", err);
+    alert("Teams context failed");
+    return;
+  } 
+
+  microsoftTeams.authentication.authenticate({
+    url: loginUrl,
+    width: 600,
+    height: 535,
+    successCallback: (accessToken) => {
+      console.log("✅ Login successful. tenantId:", tenantId);
+      console.log("✅ Access token:", accessToken);
+
+      sessionStorage.setItem("tenantId", tenantId);
+      sessionStorage.setItem("accessToken", accessToken);
+
+      showEmbeddedUI(accessToken);
+    },
+    failureCallback: (error) => {
+      console.error("❌ Login failed:", error);
+      alert("Login failed: " + error);
+    }
+  });
+}
+
 
 
     function showEmbeddedUIOld() {
