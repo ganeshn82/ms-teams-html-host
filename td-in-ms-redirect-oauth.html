@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <title>Talkdesk in Teams</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://teams.microsoft.com;">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors 'self' https://teams.microsoft.com https://*.teams.microsoft.com;">
+
   <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
   <style>
     body {
@@ -54,6 +56,14 @@
     window.addEventListener("load", () => {
       microsoftTeams.app.initialize().then(() => {
         console.log("✅ Teams SDK initialized");
+
+        // ✅ Add this to satisfy Teams tab lifecycle
+        if (microsoftTeams.pages?.config?.registerOnSaveHandler) {
+          microsoftTeams.pages.config.registerOnSaveHandler((saveEvent) => {
+            console.log("🔧 registerOnSaveHandler called");
+            saveEvent.notifySuccess();
+          });
+        }
 
         document.getElementById("loginBtn").onclick = startLogin;
         document.getElementById("logoutBtn").onclick = logout;
@@ -120,17 +130,34 @@
         }, 500);
       };
     }
+
+    
 function showEmbeddedUI(accessToken) {
   document.getElementById("loginForm").style.display = "none";
   const iframe = document.getElementById("td-emb-container");
   iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html`;
   iframe.style.display = "block";
 
-  iframe.onload = () => {
-    console.log("✅ Iframe loaded");
-    setTimeout(() => {
+  iframe.onload = () => { let attempts = 0;
+  const maxAttempts = 5;
+
+  const tryPostMessage = () => {
+    if (attempts >= maxAttempts) {
+      console.error("❌ Failed to postMessage after 5 attempts");
+      return;
+    }
+    attempts++;
+
+    try {
       sendInitMessageToTD(accessToken);
-    }, 500);
+      console.log("✅ postMessage sent");
+    } catch (err) {
+      console.warn("⏳ Retry postMessage in 500ms");
+      setTimeout(tryPostMessage, 500);
+    }
+  };
+
+  setTimeout(tryPostMessage, 500); // first attempt after delay
   };
 }
 
