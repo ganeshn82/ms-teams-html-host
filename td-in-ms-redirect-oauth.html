@@ -59,14 +59,15 @@
 
          document.getElementById("loginBtn").onclick = startLogin;
       //  document.getElementById("logoutBtn").onclick = logout;
+    const savedTenant = sessionStorage.getItem("tenantId");
+    const savedAuth = sessionStorage.getItem("accessToken"); // ✅ fixed
 
-        const savedTenant = sessionStorage.getItem("tenantId");
-        const savedAuth = sessionStorage.getItem("authCode");
+
 
         if (savedTenant && savedAuth) {
           console.log("🔁 Session found, skipping login");
           tenantId = savedTenant;
-          showEmbeddedUI();
+          showEmbeddedUI(savedAuth);
         } else {
           console.log("🆕 No session found, showing login form");
           document.getElementById("loginForm").style.display = "block";
@@ -105,7 +106,7 @@
   });
 }
 
-
+/*
     function showEmbeddedUIOld() {
       document.getElementById("loginForm").style.display = "none";
 
@@ -121,7 +122,7 @@
           sendInitMessageToTD();
         }, 500);
       };
-    }
+    } */
 
     
 function showEmbeddedUI(accessToken) {
