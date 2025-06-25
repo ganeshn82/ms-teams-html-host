@@ -74,7 +74,9 @@ HTTP Requests
 18:21:26.853 IST OPTIONS /exchange-code         204 No Content
 18:20:48.967 IST POST    /exchange-code         200 OK
 
-5. Add the app to Ms Teams app and test.
+5. Update teh NGROK URL in the login-popup.html
+  Ex:  https://c245-49-207-192-228.ngrok-free.app 
+6. Add the app to Ms Teams app and test.
 
 ===================== Source files ====================
 1. td-in-ms-redirect-oauth.html
