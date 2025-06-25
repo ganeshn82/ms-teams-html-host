@@ -65,7 +65,7 @@
 
 
 
-        if (savedTenant && savedAuth) {
+        if (savedTenant && savedAuth && savedAuth.length > 100) ) {
           console.log("🔁 Session found, skipping login");
           tenantId = savedTenant;
           showEmbeddedUI(savedAuth);
