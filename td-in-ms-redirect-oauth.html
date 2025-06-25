@@ -59,14 +59,14 @@
         document.getElementById("logoutBtn").onclick = logout;
 
         const savedTenant = sessionStorage.getItem("tenantId");
-        const savedAuth = sessionStorage.getItem("authCode");
-        const savedAuth = sessionStorage.getItem("accessToken"); // ✅ Fix: was authCode
+        const savedAuthCode = sessionStorage.getItem("authCode");
+        const savedAccessToken = sessionStorage.getItem("accessToken"); // ✅ Fix: was authCode
 
 
-        if (savedTenant && savedAuth) {
+        if (savedTenant && savedAccessToken) {
           console.log("🔁 Session found, skipping login");
           tenantId = savedTenant;
-          showEmbeddedUI(savedAuth); // ✅ Pass access token
+          showEmbeddedUI(savedAccessToken); // ✅ Pass access token
         } else {
           console.log("🆕 No session found, showing login form");
           document.getElementById("loginForm").style.display = "block";
