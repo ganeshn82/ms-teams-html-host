@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Completing Login…</title>
+  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
+</head>
+<body>
+  <p>Completing login…</p>
+  <script>
+    const ngrokUrl = "https://10e2-49-207-192-228.ngrok-free.app"; // ✅ your real ngrok URL
+
+    microsoftTeams.app.initialize().then(() => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+      const tenant = sessionStorage.getItem("tenantId"); // ✅ should already be stored in tab before opening popup
+      const error = params.get("error");
+
+      if (error) {
+        microsoftTeams.authentication.notifyFailure(error);
+      } else if (code && tenant) {
+        fetch(`${ngrokUrl}/exchange-code`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, tenant })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.access_token) {
+            microsoftTeams.authentication.notifySuccess(data.access_token); // ✅ token sent back to tab
+          } else {
+            microsoftTeams.authentication.notifyFailure("Token not received");
+          }
+        })
+        .catch(err => {
+          microsoftTeams.authentication.notifyFailure(err.message || "Fetch failed");
+        });
+      } else {
+        microsoftTeams.authentication.notifyFailure("Missing code or tenant");
+      }
+    });
+  </script>
+</body>
+</html>
