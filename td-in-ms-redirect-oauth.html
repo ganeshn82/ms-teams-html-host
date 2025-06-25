@@ -1,4 +1,58 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Talkdesk in Teams</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors 'self' https://teams.microsoft.com https://*.teams.microsoft.com;">
+
+  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    #td-emb-container {
+      width: 100%;
+      height: 90vh;
+      border: none;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container" id="loginForm">
+    <h2>Talkdesk Integration</h2>
+    <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
+    <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
+    <button id="loginBtn">Login</button>
+  </div>
+
+  </div>
+<!--
+  <button class="container" id="logoutBtn">Logout</button> -->
+
+  <iframe
+    id="td-emb-container"
+    title="Talkdesk Embedded"
+    allow="microphone idle-detection"
+    frameborder="0"
+    style="width: 100%; height: 90vh; display: none;">
+  </iframe>
+
+  <script>
   let tenantId = "";
 
   window.addEventListener("load", async () => {
@@ -141,3 +195,6 @@
     console.log("✅ Message from iframe:", event);
   });
 </script>
+
+</body>
+</html>
