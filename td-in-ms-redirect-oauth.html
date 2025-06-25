@@ -189,6 +189,12 @@ function showEmbeddedUI(accessToken) {
 
     window.addEventListener("message", (event) => {
       console.log("✅ Message from iframe:", event);
+       if (event.data?.type === "td-auth-success") {
+    const token = event.data.accessToken;
+    sessionStorage.setItem("accessToken", token);
+    sessionStorage.setItem("tenantId", tenantId); // already stored
+    showEmbeddedUI(token);
+  }
     });
   </script>
 </body>
