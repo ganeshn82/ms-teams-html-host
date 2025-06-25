@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <title>Talkdesk in Teams</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors 'self' https://teams.microsoft.com https://*.teams.microsoft.com;">
-
+  <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://teams.microsoft.com;">
   <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
   <style>
     body {
@@ -38,9 +36,9 @@
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
     <button id="loginBtn">Login</button>
-    <button class="container" id="logoutBtn">Logout</button> 
   </div>
 
+  <button class="container" id="logoutBtn">Logout</button>
 
   <iframe
     id="td-emb-container"
@@ -57,18 +55,16 @@
       microsoftTeams.app.initialize().then(() => {
         console.log("✅ Teams SDK initialized");
 
-         document.getElementById("loginBtn").onclick = startLogin;
+        document.getElementById("loginBtn").onclick = startLogin;
         document.getElementById("logoutBtn").onclick = logout;
-        
-    const savedTenant = sessionStorage.getItem("tenantId");
-    const savedAuth = sessionStorage.getItem("accessToken"); // ✅ fixed
 
+        const savedTenant = sessionStorage.getItem("tenantId");
+        const savedAuth = sessionStorage.getItem("authCode");
 
-
-        if (savedTenant && savedAuth && savedAuth.length > 100 ) {
+        if (savedTenant && savedAuth) {
           console.log("🔁 Session found, skipping login");
           tenantId = savedTenant;
-          showEmbeddedUI(savedAuth);
+          showEmbeddedUI();
         } else {
           console.log("🆕 No session found, showing login form");
           document.getElementById("loginForm").style.display = "block";
@@ -107,7 +103,7 @@
   });
 }
 
-/*
+
     function showEmbeddedUIOld() {
       document.getElementById("loginForm").style.display = "none";
 
@@ -123,35 +119,18 @@
           sendInitMessageToTD();
         }, 500);
       };
-    } */
-
-    
+    }
 function showEmbeddedUI(accessToken) {
   document.getElementById("loginForm").style.display = "none";
   const iframe = document.getElementById("td-emb-container");
   iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html`;
   iframe.style.display = "block";
 
-  iframe.onload = () => { let attempts = 0;
-  const maxAttempts = 5;
-
-  const tryPostMessage = () => {
-    if (attempts >= maxAttempts) {
-      console.error("❌ Failed to postMessage after 5 attempts");
-      return;
-    }
-    attempts++;
-
-    try {
+  iframe.onload = () => {
+    console.log("✅ Iframe loaded");
+    setTimeout(() => {
       sendInitMessageToTD(accessToken);
-      console.log("✅ postMessage sent");
-    } catch (err) {
-      console.warn("⏳ Retry postMessage in 500ms");
-      setTimeout(tryPostMessage, 500);
-    }
-  };
-
-  setTimeout(tryPostMessage, 500); // first attempt after delay
+    }, 500);
   };
 }
 
@@ -190,12 +169,6 @@ function showEmbeddedUI(accessToken) {
 
     window.addEventListener("message", (event) => {
       console.log("✅ Message from iframe:", event);
-       if (event.data?.type === "td-auth-success") {
-    const token = event.data.accessToken;
-    sessionStorage.setItem("accessToken", token);
-    sessionStorage.setItem("tenantId", tenantId); // already stored
-    showEmbeddedUI(token);
-  }
     });
   </script>
 </body>
