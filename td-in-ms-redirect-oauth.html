@@ -154,14 +154,14 @@ function showEmbeddedUI(accessToken) {
       };
 
       const origin = new URL(tdEmbContainer.src).origin;
-      /* tdEmbContainer.contentWindow.postMessage({
+      tdEmbContainer.contentWindow.postMessage({
         action: 'init_td_embedded',
         data: payload
-      }, origin); */
+      }, origin); /*
 tdEmbContainer.contentWindow.postMessage({
   action: 'init_td_embedded',
   data: payload
-}, "*");
+}, "*"); */
 
       console.log("✅ postMessage sent with payload", payload);
     }
