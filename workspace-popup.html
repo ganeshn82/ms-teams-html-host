@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>Talkdesk Workspace</title>
   <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; connect-src *;">
+  <!-- Add Teams SDK -->
+  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #talkdeskIframe { width: 100%; height: 100%; border: none; }
@@ -15,55 +17,59 @@
   <iframe id="talkdeskIframe" style="display: none;" allow="microphone"></iframe>
 
   <script>
-    // Extract token from URL hash
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const token = hashParams.get('token');
-    const tenant = hashParams.get('tenant');
-
-    if (!token || !tenant) {
-      document.getElementById('loading').textContent = "Error: Missing authentication token";
-      throw new Error("Missing token or tenant");
-    }
-
-    const iframe = document.getElementById('talkdeskIframe');
-    iframe.src = "https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html";
-
-    iframe.onload = () => {
-      const payload = {
-        url: window.location.origin,
-        int: 'msteams',
-        env: 'prd-us',
-        aid: '677b612f79c71e3ea18557c2',
-        view: 'workspace',
-        auth: {
-          accessToken: token,
-          tenant: tenant,
-          accountId: '6294d0e40934b864729451e3'
-        }
-      };
-
-      const origin = new URL(iframe.src).origin;
+    // Initialize Teams SDK first
+    microsoftTeams.app.initialize().then(() => {
+      console.log("Teams SDK initialized in workspace popup");
       
-      // Retry mechanism for postMessage
-      const sendMessage = (attempt = 1) => {
-        try {
-          iframe.contentWindow.postMessage(
-            { action: 'init_td_embedded', data: payload },
-            origin
-          );
-          document.getElementById('loading').style.display = 'none';
-          iframe.style.display = 'block';
-        } catch (e) {
-          if (attempt < 3) {
-            setTimeout(() => sendMessage(attempt + 1), 500 * attempt);
-          } else {
-            document.getElementById('loading').textContent = "Failed to initialize workspace";
+      // Extract token from URL hash
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const token = hashParams.get('token');
+      const tenant = hashParams.get('tenant');
+
+      if (!token || !tenant) {
+        document.getElementById('loading').textContent = "Error: Missing authentication token";
+        throw new Error("Missing token or tenant");
+      }
+
+      const iframe = document.getElementById('talkdeskIframe');
+      iframe.src = "https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html";
+
+      iframe.onload = () => {
+        const payload = {
+          url: window.location.origin,
+          int: 'msteams',
+          env: 'prd-us',
+          aid: '677b612f79c71e3ea18557c2',
+          view: 'workspace',
+          auth: {
+            accessToken: token,
+            tenant: tenant,
+            accountId: '6294d0e40934b864729451e3'
           }
-        }
+        };
+
+        const origin = new URL(iframe.src).origin;
+        
+        const sendMessage = (attempt = 1) => {
+          try {
+            iframe.contentWindow.postMessage(
+              { action: 'init_td_embedded', data: payload },
+              origin
+            );
+            document.getElementById('loading').style.display = 'none';
+            iframe.style.display = 'block';
+          } catch (e) {
+            if (attempt < 3) {
+              setTimeout(() => sendMessage(attempt + 1), 500 * attempt);
+            } else {
+              document.getElementById('loading').textContent = "Failed to initialize workspace";
+            }
+          }
+        };
+        
+        sendMessage();
       };
-      
-      sendMessage();
-    };
+    });
   </script>
 </body>
 </html>
