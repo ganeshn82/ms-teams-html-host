@@ -7,25 +7,19 @@
 <body>
   <p>Redirecting to Talkdesk login…</p>
   <script>
-    function getParam(name) {
-      return new URLSearchParams(window.location.search).get(name);
-    }
-
-    const tenant = getParam("tenant");
-
+    const tenant = new URLSearchParams(window.location.search).get("tenant");
     const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html";
 
-
-    if (tenant && redirectUri) {
+    if (tenant) {
       const authUrl = `https://${tenant}.talkdeskid.com/oauth/authorize` +
         `?client_id=b243bbd4f95c4d37ba8a09a485fae07d` +
         `&response_type=code` +
-        `&redirect_uri=${redirectUri}` + // ✅ now it's unencoded, as required
-        `&state=${encodeURIComponent(tenant)}`;  // 👈 use tenant as state
+        `&redirect_uri=${redirectUri}` +
+        `&state=${encodeURIComponent(tenant)}`;
 
       window.location.replace(authUrl);
     } else {
-      document.body.innerHTML = "<p>Missing tenant or redirect URI</p>";
+      document.body.innerHTML = "<p>Missing tenant ID</p>";
     }
   </script>
 </body>
