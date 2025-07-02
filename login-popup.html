@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <title>Logging you in…</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; connect-src *;">
+
 </head>
 <body>
   <p id="status">🔄 Exchanging token and loading workspace…</p>
@@ -33,26 +35,31 @@
       const iframe = document.getElementById("talkdeskIframe");
       iframe.src = "https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html";
 
-      iframe.onload = () => {
-        const payload = {
-          url: window.location.origin,
-          int: 'msteams',
-          env: 'prd-us',
-          aid: '677b612f79c71e3ea18557c2',
-          view: 'workspace',
-          auth: {
-            accessToken: token,
-            tenant: tenant,
-            accountId: '6294d0e40934b864729451e3'
-          }
-        };
+     iframe.onload = () => {
+  const payload = {
+    url: window.location.origin,
+    int: 'msteams',
+    env: 'prd-us',
+    aid: '677b612f79c71e3ea18557c2',
+    view: 'workspace',
+    auth: {
+      accessToken: token,
+      tenant: tenant,
+      accountId: '6294d0e40934b864729451e3'
+    }
+  };
 
-        const origin = new URL(iframe.src).origin;
-        iframe.contentWindow.postMessage({ action: 'init_td_embedded', data: payload }, origin);
-        document.getElementById("status").style.display = "none";
-        iframe.style.display = "block";
-        console.log("✅ Workspace initialized");
-      };
+  const origin = new URL(iframe.src).origin;
+
+  setTimeout(() => {
+    console.log("📨 Sending postMessage after delay");
+    iframe.contentWindow.postMessage({ action: 'init_td_embedded', data: payload }, origin);
+    document.getElementById("status").style.display = "none";
+    iframe.style.display = "block";
+    console.log("✅ Workspace initialized");
+  }, 500); // 🔁 delay 500ms
+};
+
     })
     .catch(err => {
       document.getElementById("status").textContent = "❌ Login failed: " + err.message;
