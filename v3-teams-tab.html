@@ -28,7 +28,7 @@
     <h2>Talkdesk Workspace</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
-    <button id="launchBtn">Launch Talkdesk Workspace</button>
+    <button id="launchBtn">Launch Talkdesk Workspace1</button>
     <button id="logoutBtn">Clear Session</button>
   </div>
 
@@ -44,7 +44,7 @@
       };
     });
 
-    function launchPopup() {
+   /* function launchPopup() {
       const tenantId = document.getElementById("tenantUrl").value.trim();
       if (!tenantId) {
         alert("Please enter tenant URL");
@@ -57,7 +57,40 @@
       popupRef = window.open(popupUrl, "TalkdeskWorkspace", "width=1200,height=800");
 
       if (!popupRef) alert("Please allow popups to open the Talkdesk Workspace.");
+    } */
+
+    function launchPopup() {
+  const tenantId = document.getElementById("tenantUrl").value.trim();
+  if (!tenantId) {
+    alert("Please enter tenant URL");
+    return;
+  }
+
+  microsoftTeams.authentication.authenticate({
+    url: `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`,
+    width: 1200,
+    height: 800,
+    successCallback: function (result) {
+      console.log("✅ Auth success:", result);
+
+      // 👇 Also receive token via postMessage (redundant safety)
+      window.addEventListener("message", (event) => {
+        if (event.data?.type === "td-auth-success") {
+          console.log("📥 PostMessage Access Token:", event.data.accessToken);
+          console.log("📥 Tenant:", event.data.tenant);
+        }
+      });
+
+      alert("Talkdesk token: " + result);
+    },
+    failureCallback: function (error) {
+      console.error("❌ Auth failed:", error);
+      alert("Login failed: " + error);
     }
+  });
+}
+
+    
   </script>
 </body>
 </html>
