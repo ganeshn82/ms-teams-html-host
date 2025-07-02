@@ -1,1 +1,96 @@
-1
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Talkdesk Launcher</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://teams.microsoft.com;">
+  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Talkdesk Workspace</h2>
+    <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
+    <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
+    <button id="launchBtn">Launch Talkdesk Workspace1</button>
+    <button id="logoutBtn">Clear Session</button>
+  </div>
+
+  <script>
+    let popupRef = null;
+
+    microsoftTeams.app.initialize().then(() => {
+      console.log("✅ Teams SDK initialized");
+      document.getElementById("launchBtn").onclick = launchPopup;
+      document.getElementById("logoutBtn").onclick = () => {
+        sessionStorage.clear();
+        alert("Session cleared");
+      };
+    });
+
+   /* function launchPopup() {
+      const tenantId = document.getElementById("tenantUrl").value.trim();
+      if (!tenantId) {
+        alert("Please enter tenant URL");
+        return;
+      }
+
+
+      const popupUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`;
+
+      popupRef = window.open(popupUrl, "TalkdeskWorkspace", "width=1200,height=800");
+
+      if (!popupRef) alert("Please allow popups to open the Talkdesk Workspace.");
+    } */
+
+    function launchPopup() {
+  const tenantId = document.getElementById("tenantUrl").value.trim();
+  if (!tenantId) {
+    alert("Please enter tenant URL");
+    return;
+  }
+
+  microsoftTeams.authentication.authenticate({
+    url: `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`,
+    width: 1200,
+    height: 800,
+    successCallback: function (result) {
+      console.log("✅ Auth success:", result);
+
+      // 👇 Also receive token via postMessage (redundant safety)
+      window.addEventListener("message", (event) => {
+        if (event.data?.type === "td-auth-success") {
+          console.log("📥 PostMessage Access Token:", event.data.accessToken);
+          console.log("📥 Tenant:", event.data.tenant);
+        }
+      });
+
+      alert("Talkdesk token: " + result);
+    },
+    failureCallback: function (error) {
+      console.error("❌ Auth failed:", error);
+      alert("Login failed: " + error);
+    }
+  });
+}
+
+    
+  </script>
+</body>
+</html>
