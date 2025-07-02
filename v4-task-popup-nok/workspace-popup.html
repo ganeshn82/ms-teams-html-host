@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Talkdesk Workspace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Optionally tighten CSP once debugging is done -->
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; connect-src *; style-src * 'unsafe-inline';">
+</head>
+<body>
+  <p id="status">🔄 Loading Talkdesk workspace…</p>
+  <iframe id="talkdeskIframe" style="width: 100%; height: 90vh; display: none;" allow="microphone"></iframe>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      const tenant = params.get("tenant");
+
+      if (!token || !tenant) {
+        document.getElementById("status").textContent = "❌ Missing access token or tenant";
+        console.error("❌ Missing access token or tenant in query params");
+        return;
+      }
+
+      const iframe = document.getElementById("talkdeskIframe");
+      const targetUrl = "https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html";
+      iframe.src = targetUrl;
+
+      iframe.onload = () => {
+        const payload = {
+          url: window.location.origin,
+          int: "msteams",
+          env: "prd-us",
+          aid: "677b612f79c71e3ea18557c2",
+          view: "workspace",
+          auth: {
+            accessToken: token,
+            tenant: tenant,
+            accountId: "6294d0e40934b864729451e3"
+          }
+        };
+
+        const origin = new URL(targetUrl).origin;
+
+        setTimeout(() => {
+          try {
+            console.log("📨 Sending postMessage to iframe:", payload);
+            iframe.contentWindow.postMessage({ action: "init_td_embedded", data: payload }, origin);
+            document.getElementById("status").style.display = "none";
+            iframe.style.display = "block";
+          } catch (e) {
+            console.error("❌ Failed to postMessage to iframe:", e);
+            document.getElementById("status").textContent = "❌ Failed to initialize Talkdesk workspace.";
+          }
+        }, 500); // ⏳ Delay ensures iframe is fully ready
+      };
+
+      iframe.onerror = () => {
+        console.error("❌ Iframe load failed");
+        document.getElementById("status").textContent = "❌ Failed to load Talkdesk workspace.";
+      };
+    })();
+  </script>
+</body>
+</html>
