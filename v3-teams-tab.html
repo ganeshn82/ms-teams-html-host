@@ -17,16 +17,16 @@
     <h2>Talkdesk Workspace</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
-    <button id="launchBtn">Launch Talkdesk Workspace3</button>
-    <button id="logoutBtn">Clear Session</button>
+    <button id="launchBtn">Open Talkdesk Workspace1</button>
   </div>
 
   <script>
     microsoftTeams.app.initialize().then(() => {
       document.getElementById("launchBtn").onclick = () => {
         const tenantId = document.getElementById("tenantUrl").value.trim();
-        if (!tenantId) return alert("Enter tenant URL");
+        if (!tenantId) return alert("Please enter tenant");
 
+        // Launch popup to get token
         microsoftTeams.authentication.authenticate({
           url: `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`,
           width: 600,
@@ -34,22 +34,17 @@
           successCallback: function (result) {
             try {
               const authData = JSON.parse(result);
-              microsoftTeams.tasks.startTask({
-                title: "Talkdesk Workspace",
-                width: 1200,
-                height: 800,
-                url: `https://ganeshn82.github.io/ms-teams-html-host/workspace-popup.html?token=${encodeURIComponent(authData.accessToken)}&tenant=${encodeURIComponent(authData.tenant)}`
-              });
+              const workspaceUrl = `https://ganeshn82.github.io/ms-teams-html-host/workspace-popup.html?token=${encodeURIComponent(authData.accessToken)}&tenant=${encodeURIComponent(authData.tenant)}`;
+              
+              // ✅ Open in external Chrome browser tab
+              window.open(workspaceUrl, "_blank");
             } catch (e) {
-              console.error("Error parsing auth result:", e);
+              alert("Error launching workspace");
+              console.error("Parsing error:", e);
             }
           },
-          failureCallback: error => alert("Login failed: " + error)
+          failureCallback: err => alert("Auth failed: " + err)
         });
-      };
-      document.getElementById("logoutBtn").onclick = () => {
-        sessionStorage.clear();
-        alert("Session cleared");
       };
     });
   </script>
