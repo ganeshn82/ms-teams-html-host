@@ -29,37 +29,18 @@
     })
     .then(res => res.json())
     .then(data => {
-      const token = data.access_token;
+    const token = data.access_token;
       if (!token) throw new Error("No access token received");
-
-      const iframe = document.getElementById("talkdeskIframe");
-      iframe.src = "https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html";
-
-     iframe.onload = () => {
-  const payload = {
-    url: window.location.origin,
-    int: 'msteams',
-    env: 'prd-us',
-    aid: '677b612f79c71e3ea18557c2',
-    view: 'workspace',
-    auth: {
-      accessToken: token,
-      tenant: tenant,
-      accountId: '6294d0e40934b864729451e3'
-    }
-  };
-
-  const origin = new URL(iframe.src).origin;
-
-  setTimeout(() => {
-    console.log("📨 Sending postMessage after delay");
-    iframe.contentWindow.postMessage({ action: 'init_td_embedded', data: payload }, origin);
-    document.getElementById("status").style.display = "none";
-    iframe.style.display = "block";
-    console.log("✅ Workspace initialized");
-  }, 500); // 🔁 delay 500ms
-};
-
+    
+      // Return token to parent which will open the workspace popup
+      microsoftTeams.authentication.notifySuccess(JSON.stringify({
+        accessToken: token,
+        tenant: tenant
+      }));
+    })
+    .catch(err => {
+      microsoftTeams.authentication.notifyFailure(err.message);
+       
     })
     .catch(err => {
       document.getElementById("status").textContent = "❌ Login failed: " + err.message;
