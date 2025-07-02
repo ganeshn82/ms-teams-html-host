@@ -4,36 +4,42 @@
   <meta charset="UTF-8">
   <title>Talkdesk Workspace</title>
   <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; connect-src *;">
-  <!-- Add Teams SDK -->
   <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; }
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     #talkdeskIframe { width: 100%; height: 100%; border: none; }
-    #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    #loading { 
+      position: absolute; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%); 
+      font-family: Arial, sans-serif;
+    }
   </style>
 </head>
 <body>
   <div id="loading">Loading Talkdesk Workspace...</div>
-  <iframe id="talkdeskIframe" style="display: none;" allow="microphone"></iframe>
+  <iframe id="talkdeskIframe" style="display: none;" allow="microphone *; clipboard-write"></iframe>
 
   <script>
-    // Initialize Teams SDK first
     microsoftTeams.app.initialize().then(() => {
       console.log("Teams SDK initialized in workspace popup");
       
-      // Extract token from URL hash
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const token = hashParams.get('token');
-      const tenant = hashParams.get('tenant');
+      // Get token from query parameters
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const tenant = params.get('tenant');
 
       if (!token || !tenant) {
         document.getElementById('loading').textContent = "Error: Missing authentication token";
-        throw new Error("Missing token or tenant");
+        console.error("Missing token or tenant");
+        return;
       }
 
       const iframe = document.getElementById('talkdeskIframe');
       iframe.src = "https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html";
 
+      // Handle iframe load
       iframe.onload = () => {
         const payload = {
           url: window.location.origin,
@@ -50,19 +56,31 @@
 
         const origin = new URL(iframe.src).origin;
         
+        // Retry mechanism for postMessage
         const sendMessage = (attempt = 1) => {
           try {
+            console.log(`Attempt ${attempt} to initialize workspace`);
             iframe.contentWindow.postMessage(
               { action: 'init_td_embedded', data: payload },
               origin
             );
-            document.getElementById('loading').style.display = 'none';
-            iframe.style.display = 'block';
+            
+            // Listen for response from iframe
+            window.addEventListener('message', (event) => {
+              if (event.origin === origin && event.data === 'td-embedded-ready') {
+                document.getElementById('loading').style.display = 'none';
+                iframe.style.display = 'block';
+                console.log("Workspace initialized successfully");
+              }
+            });
+            
           } catch (e) {
             if (attempt < 3) {
-              setTimeout(() => sendMessage(attempt + 1), 500 * attempt);
+              console.warn(`Attempt ${attempt} failed, retrying...`);
+              setTimeout(() => sendMessage(attempt + 1), 1000 * attempt);
             } else {
               document.getElementById('loading').textContent = "Failed to initialize workspace";
+              console.error("Final attempt failed:", e);
             }
           }
         };
