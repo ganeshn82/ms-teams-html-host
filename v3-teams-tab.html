@@ -65,7 +65,7 @@
     alert("Please enter tenant URL");
     return;
   }
-
+/*
   microsoftTeams.authentication.authenticate({
     url: `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`,
     width: 1200,
@@ -87,7 +87,38 @@
       console.error("❌ Auth failed:", error);
       alert("Login failed: " + error);
     }
+  }); */
+
+        // First get the token via Teams auth
+  microsoftTeams.authentication.authenticate({
+    url: `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`,
+    width: 600,
+    height: 600,
+    successCallback: function (result) {
+      // Received token, now open workspace popup
+      const authData = JSON.parse(result);
+      openWorkspacePopup(authData.accessToken, authData.tenant);
+    },
+    failureCallback: function (error) {
+      console.error("❌ Auth failed:", error);
+      microsoftTeams.app.showAlert("Login failed: " + error);
+    }
   });
+}
+
+function openWorkspacePopup(token, tenant) {
+  // Create popup URL with token as hash (not query param for security)
+  const popupUrl = `https://ganeshn82.github.io/ms-teams-html-host/workspace-popup.html#token=${encodeURIComponent(token)}&tenant=${encodeURIComponent(tenant)}`;
+  
+  // Open popup using Teams-safe method
+  microsoftTeams.app.openLink(popupUrl, {
+    size: { width: 1200, height: 800 },
+    displayMode: "popup"
+  }).catch(err => {
+    console.error("Failed to open popup:", err);
+    microsoftTeams.app.showAlert("Could not open workspace window. Please allow popups.");
+  });
+}
 }
 
     
