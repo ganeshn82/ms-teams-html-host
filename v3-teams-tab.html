@@ -28,7 +28,7 @@
     <h2>Talkdesk Workspace</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
-    <button id="launchBtn">Launch Talkdesk Workspace5</button>
+    <button id="launchBtn">Launch Talkdesk Workspace6</button>
     <button id="logoutBtn">Clear Session</button>
   </div>
 
@@ -89,21 +89,39 @@
     }
   }); */
 
-        // First get the token via Teams auth
+       // First authenticate to get token
   microsoftTeams.authentication.authenticate({
     url: `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`,
     width: 600,
     height: 600,
     successCallback: function (result) {
-      // Received token, now open workspace popup
-      const authData = JSON.parse(result);
-      openWorkspacePopup(authData.accessToken, authData.tenant);
+      try {
+        const authData = JSON.parse(result);
+        
+        // Open as a task module (Teams' version of a popup)
+        microsoftTeams.tasks.startTask({
+          title: "Talkdesk Workspace",
+          width: 1200,
+          height: 800,
+          url: `https://ganeshn82.github.io/ms-teams-html-host/workspace-popup.html?token=${encodeURIComponent(authData.accessToken)}&tenant=${encodeURIComponent(authData.tenant)}`,
+          completionBotId: "YOUR_BOT_ID" // Optional if you need callbacks
+        }, (err, result) => {
+          if (err) {
+            console.error("Task module failed:", err);
+            microsoftTeams.app.showAlert("Failed to open workspace");
+          }
+        });
+      } catch (e) {
+        console.error("Error handling auth result:", e);
+        microsoftTeams.app.showAlert("Failed to launch workspace");
+      }
     },
     failureCallback: function (error) {
       console.error("❌ Auth failed:", error);
       microsoftTeams.app.showAlert("Login failed: " + error);
     }
   });
+    }
 
 function openWorkspacePopup(token, tenant) {
   // Create popup URL with token as hash (not query param for security)
