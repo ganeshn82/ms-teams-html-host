@@ -5,46 +5,48 @@
   <title>Logging you in…</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; connect-src *;">
-
+  <!-- Add Teams SDK -->
+  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
 </head>
 <body>
   <p id="status">🔄 Exchanging token and loading workspace…</p>
   <iframe id="talkdeskIframe" style="width: 100%; height: 90vh; display: none;" allow="microphone"></iframe>
 
   <script>
-    const ngrokUrl = "https://261f-49-207-220-61.ngrok-free.app";
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    const tenant = params.get("state");
+    // Initialize Teams SDK first
+    microsoftTeams.app.initialize().then(() => {
+      console.log("Teams SDK initialized in popup");
+      
+      const ngrokUrl = "https://261f-49-207-220-61.ngrok-free.app";
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+      const tenant = params.get("state");
 
-    if (!code || !tenant) {
-      document.getElementById("status").textContent = "❌ Missing OAuth code or tenant.";
-      throw new Error("Missing OAuth code or tenant");
-    }
+      if (!code || !tenant) {
+        document.getElementById("status").textContent = "❌ Missing OAuth code or tenant.";
+        throw new Error("Missing OAuth code or tenant");
+      }
 
-    fetch(`${ngrokUrl}/exchange-code`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, tenant })
-    })
-    .then(res => res.json())
-    .then(data => {
-    const token = data.access_token;
-      if (!token) throw new Error("No access token received");
-    
-      // Return token to parent which will open the workspace popup
-      microsoftTeams.authentication.notifySuccess(JSON.stringify({
-        accessToken: token,
-        tenant: tenant
-      }));
-    })
-    .catch(err => {
-      microsoftTeams.authentication.notifyFailure(err.message);
-       
-    })
-    .catch(err => {
-      document.getElementById("status").textContent = "❌ Login failed: " + err.message;
-      console.error("❌ Token exchange failed:", err);
+      fetch(`${ngrokUrl}/exchange-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, tenant })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const token = data.access_token;
+        if (!token) throw new Error("No access token received");
+      
+        // Return token to parent
+        microsoftTeams.authentication.notifySuccess(JSON.stringify({
+          accessToken: token,
+          tenant: tenant
+        }));
+      })
+      .catch(err => {
+        console.error("Auth error:", err);
+        microsoftTeams.authentication.notifyFailure(err.message);
+      });
     });
   </script>
 </body>
