@@ -7,20 +7,9 @@
   <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://teams.microsoft.com;">
   <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 400px;
-      margin: auto;
-    }
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+    .container { max-width: 400px; margin: auto; }
+    input, button { width: 100%; padding: 12px; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -28,13 +17,11 @@
     <h2>Talkdesk Workspace</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
-    <button id="launchBtn">Launch Talkdesk Workspace6</button>
+    <button id="launchBtn">Launch Talkdesk Workspace8</button>
     <button id="logoutBtn">Clear Session</button>
   </div>
 
   <script>
-    let popupRef = null;
-
     microsoftTeams.app.initialize().then(() => {
       console.log("✅ Teams SDK initialized");
       document.getElementById("launchBtn").onclick = launchPopup;
@@ -44,100 +31,37 @@
       };
     });
 
-   /* function launchPopup() {
+    function launchPopup() {
       const tenantId = document.getElementById("tenantUrl").value.trim();
       if (!tenantId) {
         alert("Please enter tenant URL");
         return;
       }
 
-
-      const popupUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`;
-
-      popupRef = window.open(popupUrl, "TalkdeskWorkspace", "width=1200,height=800");
-
-      if (!popupRef) alert("Please allow popups to open the Talkdesk Workspace.");
-    } */
-
-    function launchPopup() {
-  const tenantId = document.getElementById("tenantUrl").value.trim();
-  if (!tenantId) {
-    alert("Please enter tenant URL");
-    return;
-  }
-/*
-  microsoftTeams.authentication.authenticate({
-    url: `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`,
-    width: 1200,
-    height: 800,
-    successCallback: function (result) {
-      console.log("✅ Auth success:", result);
-
-      // 👇 Also receive token via postMessage (redundant safety)
-      window.addEventListener("message", (event) => {
-        if (event.data?.type === "td-auth-success") {
-          console.log("📥 PostMessage Access Token:", event.data.accessToken);
-          console.log("📥 Tenant:", event.data.tenant);
+      microsoftTeams.authentication.authenticate({
+        url: `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`,
+        width: 600,
+        height: 600,
+        successCallback: function (result) {
+          try {
+            const authData = JSON.parse(result); // from notifySuccess(JSON.stringify({}))
+            microsoftTeams.tasks.startTask({
+              title: "Talkdesk Workspace",
+              width: 1200,
+              height: 800,
+              url: `https://ganeshn82.github.io/ms-teams-html-host/workspace-popup.html?token=${encodeURIComponent(authData.accessToken)}&tenant=${encodeURIComponent(authData.tenant)}`
+            });
+          } catch (e) {
+            console.error("Error parsing auth result:", e);
+            alert("Auth success, but token format invalid");
+          }
+        },
+        failureCallback: function (error) {
+          console.error("❌ Auth failed:", error);
+          alert("Login failed: " + error);
         }
       });
-
-      alert("Talkdesk token: " + result);
-    },
-    failureCallback: function (error) {
-      console.error("❌ Auth failed:", error);
-      alert("Login failed: " + error);
     }
-  }); */
-
-       // First authenticate to get token
-  microsoftTeams.authentication.authenticate({
-    url: `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`,
-    width: 600,
-    height: 600,
-    successCallback: function (result) {
-      try {
-        const authData = JSON.parse(result);
-        
-        // Open as a task module (Teams' version of a popup)
-        microsoftTeams.tasks.startTask({
-          title: "Talkdesk Workspace",
-          width: 1200,
-          height: 800,
-          url: `https://ganeshn82.github.io/ms-teams-html-host/workspace-popup.html?token=${encodeURIComponent(authData.accessToken)}&tenant=${encodeURIComponent(authData.tenant)}`,
-          completionBotId: "YOUR_BOT_ID" // Optional if you need callbacks
-        }, (err, result) => {
-          if (err) {
-            console.error("Task module failed:", err);
-            microsoftTeams.app.showAlert("Failed to open workspace");
-          }
-        });
-      } catch (e) {
-        console.error("Error handling auth result:", e);
-        microsoftTeams.app.showAlert("Failed to launch workspace");
-      }
-    },
-    failureCallback: function (error) {
-      console.error("❌ Auth failed:", error);
-      microsoftTeams.app.showAlert("Login failed: " + error);
-    }
-  });
-    }
-
-function openWorkspacePopup(token, tenant) {
-  // Create popup URL with token as hash (not query param for security)
-  const popupUrl = `https://ganeshn82.github.io/ms-teams-html-host/workspace-popup.html#token=${encodeURIComponent(token)}&tenant=${encodeURIComponent(tenant)}`;
-  
-  // Open popup using Teams-safe method
-  microsoftTeams.app.openLink(popupUrl, {
-    size: { width: 1200, height: 800 },
-    displayMode: "popup"
-  }).catch(err => {
-    console.error("Failed to open popup:", err);
-    microsoftTeams.app.showAlert("Could not open workspace window. Please allow popups.");
-  });
-}
-}
-   
   </script>
 </body>
 </html>
