@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Talkdesk Launcher</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://teams.microsoft.com;">
+  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+    .container { max-width: 400px; margin: auto; }
+    input, button { width: 100%; padding: 12px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Talkdesk Workspace</h2>
+    <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
+    <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
+    <button id="launchBtn">Launch Talkdesk Workspace8</button>
+    <button id="logoutBtn">Clear Session</button>
+  </div>
+
+  <script>
+    microsoftTeams.app.initialize().then(() => {
+      console.log("✅ Teams SDK initialized");
+      document.getElementById("launchBtn").onclick = launchPopup;
+      document.getElementById("logoutBtn").onclick = () => {
+        sessionStorage.clear();
+        alert("Session cleared");
+      };
+    });
+
+    function launchPopup() {
+      const tenantId = document.getElementById("tenantUrl").value.trim();
+      if (!tenantId) {
+        alert("Please enter tenant URL");
+        return;
+      }
+
+      microsoftTeams.authentication.authenticate({
+        url: `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}`,
+        width: 600,
+        height: 600,
+        successCallback: function (result) {
+          try {
+            const authData = JSON.parse(result); // from notifySuccess(JSON.stringify({}))
+            microsoftTeams.tasks.startTask({
+              title: "Talkdesk Workspace",
+              width: 1200,
+              height: 800,
+              url: `https://ganeshn82.github.io/ms-teams-html-host/workspace-popup.html?token=${encodeURIComponent(authData.accessToken)}&tenant=${encodeURIComponent(authData.tenant)}`
+            });
+          } catch (e) {
+            console.error("Error parsing auth result:", e);
+            alert("Auth success, but token format invalid");
+          }
+        },
+        failureCallback: function (error) {
+          console.error("❌ Auth failed:", error);
+          alert("Login failed: " + error);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
