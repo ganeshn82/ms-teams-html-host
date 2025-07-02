@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Talkdesk Workspace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    #talkdeskIframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <p id="status">🔄 Starting authentication…</p>
+  <iframe id="talkdeskIframe" style="display: none;"></iframe>
+
+  <script>
+    const tenant = new URLSearchParams(window.location.search).get("tenant");
+    const redirectUri = window.location.origin + "/login-end.html";
+    const clientId = "b243bbd4f95c4d37ba8a09a485fae07d";
+    const ngrokUrl = "https://435c-49-207-233-193.ngrok-free.app"; // 🟢 your backend
+
+    if (!tenant) {
+      document.getElementById("status").textContent = "❌ Missing tenant.";
+      throw new Error("Missing tenant");
+    }
+
+    // Step 1: Start OAuth flow
+    const authUrl = `https://${tenant}.talkdeskid.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&state=${tenant}`;
+    window.location.href = authUrl;
+  </script>
+</body>
+</html>
