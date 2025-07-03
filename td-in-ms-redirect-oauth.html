@@ -35,7 +35,7 @@
     <h2>Talkdesk Integration</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
-    <button id="loginBtn">Login2</button>
+    <button id="loginBtn">Login4</button>
   </div>
 
   <button class="container" id="logoutBtn">Logout</button>
@@ -50,106 +50,131 @@
 
   <script>
     let tenantId = "";
+    let isCallActive = false;
 
+    // Initialize Teams app and set up handlers
     window.addEventListener("load", () => {
       microsoftTeams.app.initialize().then(() => {
         console.log("✅ Teams SDK initialized");
-            // Enable app caching
-            microsoftTeams.teamsCore.registerOnLoadHandler((data) => {
-              console.log("📦 teamsCore.loadHandler", data);
-              microsoftTeams.app.notifySuccess(); // ✅ Important
-            });
-            
-            microsoftTeams.teamsCore.registerBeforeUnloadHandler((readyToUnload) => {
-              console.log("🧹 teamsCore.beforeUnload called");
-              // Optional: dispose resources here
-              readyToUnload(); // ✅ MUST call
-              return true;
-            });
-        document.getElementById("loginBtn").onclick = startLogin;
-        document.getElementById("logoutBtn").onclick = logout;
-
-        const savedTenant = sessionStorage.getItem("tenantId");
-        const savedAuthCode = sessionStorage.getItem("authCode");
-        const savedAccessToken = sessionStorage.getItem("accessToken"); // ✅ Fix: was authCode
-
-
-        if (savedTenant && savedAccessToken) {
-          console.log("🔁 Session found, skipping login");
-          tenantId = savedTenant;
-          showEmbeddedUI(savedAccessToken); // ✅ Pass access token
-        } else {
-          console.log("🆕 No session found, showing login form");
-          document.getElementById("loginForm").style.display = "block";
-        }
+        
+        // 1. Teams Core Handlers
+        microsoftTeams.app.notifyAppLoaded();
+        microsoftTeams.app.notifySuccess();
+        
+        // 2. State Restoration
+        window.addEventListener("message", handleIframeMessage);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        
+        // 3. Enhanced BeforeUnload Handling
+        microsoftTeams.app.registerBeforeUnloadHandler(handleBeforeUnload);
+          
+        // Initialize UI based on session state
+        initializeApp();
       });
     });
 
-  async function startLogin() {
-  console.log("🔁 startLogin called");
-  tenantId = document.getElementById("tenantUrl").value.trim();
-  if (!tenantId) {
-    alert("Please enter your tenant URL.");
-    return;
-  }
-
-  const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html";
-  const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodeURIComponent(redirectUri)}`;
-
-  microsoftTeams.authentication.authenticate({
-    url: loginUrl,
-    width: 600,
-    height: 535,
-    successCallback: (accessToken) => {
-      console.log("✅ Login successful. tenantId:", tenantId);
-      console.log("✅ Access token:", accessToken);
-
-      sessionStorage.setItem("tenantId", tenantId);
-      sessionStorage.setItem("accessToken", accessToken);
-
-      showEmbeddedUI(accessToken);
-    },
-    failureCallback: (error) => {
-      console.error("❌ Login failed:", error);
-      alert("Login failed: " + error);
+    // Handle messages from Talkdesk iframe
+    function handleIframeMessage(event) {
+      console.log("✅ Message from iframe:", event);
+      if (event.data?.callState) {
+        isCallActive = event.data.callState === 'active';
+        console.log(`Call state updated: ${isCallActive ? 'Active' : 'Inactive'}`);
+      }
     }
-  });
-}
 
+    // Handle tab visibility changes
+    function handleVisibilityChange() {
+      console.log(`Visibility changed: ${document.visibilityState}`);
+      if (document.visibilityState === 'visible' && sessionStorage.getItem("accessToken")) {
+        console.log('Restoring Talkdesk session');
+        showEmbeddedUI(sessionStorage.getItem("accessToken"));
+      }
+    }
 
-    function showEmbeddedUIOld() {
+    // Handle app unload
+    function handleBeforeUnload() {
+      if (isCallActive) {
+        const userConfirmed = confirm("You have an active call. Are you sure you want to leave?");
+        if (!userConfirmed) {
+          return false; // Prevent unload
+        }
+      }
+      return true; // Allow unload
+    }
+
+    // Initialize app based on session state
+    function initializeApp() {
+      document.getElementById("loginBtn").onclick = startLogin;
+      document.getElementById("logoutBtn").onclick = logout;
+
+      const savedTenant = sessionStorage.getItem("tenantId");
+      const savedAccessToken = sessionStorage.getItem("accessToken");
+
+      if (savedTenant && savedAccessToken) {
+        console.log("🔁 Session found, skipping login");
+        tenantId = savedTenant;
+        showEmbeddedUI(savedAccessToken);
+      } else {
+        console.log("🆕 No session found, showing login form");
+        document.getElementById("loginForm").style.display = "block";
+      }
+    }
+
+    // Start Talkdesk login flow
+    async function startLogin() {
+      console.log("🔁 startLogin called");
+      tenantId = document.getElementById("tenantUrl").value.trim();
+      if (!tenantId) {
+        alert("Please enter your tenant URL.");
+        return;
+      }
+
+      const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html";
+      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodeURIComponent(redirectUri)}`;
+
+      microsoftTeams.authentication.authenticate({
+        url: loginUrl,
+        width: 600,
+        height: 535,
+        successCallback: (accessToken) => {
+          console.log("✅ Login successful. tenantId:", tenantId);
+          sessionStorage.setItem("tenantId", tenantId);
+          sessionStorage.setItem("accessToken", accessToken);
+          showEmbeddedUI(accessToken);
+        },
+        failureCallback: (error) => {
+          console.error("❌ Login failed:", error);
+          alert("Login failed: " + error);
+        }
+      });
+    }
+
+    // Show Talkdesk embedded UI
+    function showEmbeddedUI(accessToken) {
       document.getElementById("loginForm").style.display = "none";
-
-      const authCode = sessionStorage.getItem("authCode");
       const iframe = document.getElementById("td-emb-container");
-
-//      iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?code=${authCode}&state=xyz`;
-      iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?access_token=${encodeURIComponent(token)}&tenant=${tenantId}`;
-
+      
+      // Only reload iframe if src changed or iframe was unloaded
+      const newSrc = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?access_token=${encodeURIComponent(accessToken)}&tenant=${tenantId}`;
+      
+      if (!iframe.src || iframe.src !== newSrc) {
+        iframe.src = newSrc;
+      } else {
+        // If iframe is already loaded, just send init message
+        sendInitMessageToTD(accessToken);
+      }
+      
       iframe.style.display = "block";
-
       iframe.onload = () => {
         console.log("✅ Iframe loaded");
-        setTimeout(() => {
-          sendInitMessageToTD();
-        }, 500);
+        sendInitMessageToTD(accessToken);
+      };
+      iframe.onerror = () => {
+        console.error("❌ Iframe failed to load");
       };
     }
-function showEmbeddedUI(accessToken) {
-  document.getElementById("loginForm").style.display = "none";
-  const iframe = document.getElementById("td-emb-container");
-  iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html`;
-  iframe.style.display = "block";
 
-  iframe.onload = () => {
-    console.log("✅ Iframe loaded");
-    setTimeout(() => {
-      sendInitMessageToTD(accessToken);
-    }, 500);
-  };
-}
-
-    
+    // Send initialization message to Talkdesk iframe
     function sendInitMessageToTD(token) {
       const tdEmbContainer = document.getElementById('td-emb-container');
       const tenant = sessionStorage.getItem("tenantId");
@@ -161,10 +186,10 @@ function showEmbeddedUI(accessToken) {
         aid: '677b612f79c71e3ea18557c2',
         view: 'workspace',
         auth: {
-        accessToken: token,
-        tenant: tenant,
-        accountId: '6294d0e40934b864729451e3'
-         }
+          accessToken: token,
+          tenant: tenant,
+          accountId: '6294d0e40934b864729451e3'
+        }
       };
 
       const origin = new URL(tdEmbContainer.src).origin;
@@ -176,15 +201,12 @@ function showEmbeddedUI(accessToken) {
       console.log("✅ postMessage sent with payload", payload);
     }
 
+    // Handle logout
     function logout() {
       console.log("🔁 Logging out...");
       sessionStorage.clear();
       location.reload();
     }
-
-    window.addEventListener("message", (event) => {
-      console.log("✅ Message from iframe:", event);
-    });
   </script>
 </body>
 </html>
