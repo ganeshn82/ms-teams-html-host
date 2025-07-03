@@ -31,11 +31,11 @@
 </head>
 
 <body>
-  <div class="container" id="loginForm" style="display:none;">
+  <div class="container" id="loginForm">
     <h2>Talkdesk Integration</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
-    <button id="loginBtn">LoginTripl</button>
+    <button id="loginBtn">Login-Tripl</button>
   </div>
 
   <button class="container" id="logoutBtn" style="display:none;">Logout</button>
@@ -52,126 +52,33 @@
     let tenantId = "";
     let isCallActive = false;
     let tdInitSent = false;
-    let teamsInitialized = false;
 
-    // Initialize Teams app and set up handlers
+    // Initialize Teams app
     window.addEventListener("load", () => {
-      // First try to initialize with teamsCore for newer versions
-      if (microsoftTeams.teamsCore) {
-        microsoftTeams.teamsCore.initialize().then(() => {
-          console.log("✅ Teams Core SDK initialized");
-          teamsInitialized = true;
-          setupApp();
-        }).catch(err => {
-          console.warn("⚠️ Teams Core init failed, falling back to app.initialize", err);
-          initializeFallback();
-        });
-      } else {
-        initializeFallback();
-      }
-    });
-
-    function initializeFallback() {
-      microsoftTeams.app.initialize().then(() => {
-        console.log("✅ Teams App SDK initialized");
-        teamsInitialized = true;
-        setupApp();
-      }).catch(err => {
-        console.error("❌ Teams SDK failed to initialize:", err);
-        // Fallback UI if Teams SDK fails
-        document.getElementById("loginForm").style.display = "block";
-      });
-    }
-
-    function setupApp() {
-      try {
-        // 1. Teams Core Handlers
-        if (microsoftTeams.app.notifyAppLoaded) {
-          microsoftTeams.app.notifyAppLoaded();
-          microsoftTeams.app.notifySuccess();
-        } else if (microsoftTeams.teamsCore?.registerOnLoadHandler) {
-          microsoftTeams.teamsCore.registerOnLoadHandler(() => {
-            microsoftTeams.app.notifySuccess();
-          });
-        }
-
-        // 2. BeforeUnload Handling (different methods for different SDK versions)
-        if (microsoftTeams.teamsCore?.registerBeforeUnloadHandler) {
-          microsoftTeams.teamsCore.registerBeforeUnloadHandler((readyToUnload) => {
-            readyToUnload(handleBeforeUnload());
-          });
-        } else if (microsoftTeams.app.registerBeforeUnloadHandler) {
-          microsoftTeams.app.registerBeforeUnloadHandler(handleBeforeUnload);
-        } else {
-          console.warn("⚠️ No beforeUnload handler available");
-        }
-
-        // 3. State Restoration
-        window.addEventListener("message", handleIframeMessage);
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-
-        // 4. UI Setup
-        initializeApp();
-      } catch (err) {
-        console.error("❌ Setup error:", err);
-        document.getElementById("loginForm").style.display = "block";
-      }
-    }
-
-    // Handle messages from Talkdesk iframe
-    function handleIframeMessage(event) {
-      console.log("✅ Message from iframe:", event);
-      if (event.data?.callState) {
-        isCallActive = event.data.callState === 'active';
-        console.log(`Call state updated: ${isCallActive ? 'Active' : 'Inactive'}`);
-      }
-    }
-
-    // Handle tab visibility changes
-    function handleVisibilityChange() {
-      console.log(`Visibility changed: ${document.visibilityState}`);
-      if (document.visibilityState === 'visible' && sessionStorage.getItem("accessToken")) {
-        console.log('Restoring Talkdesk session');
-        showEmbeddedUI(sessionStorage.getItem("accessToken"));
-        setTimeout(() => {
-          sendInitMessageToTD(sessionStorage.getItem("accessToken"));
-        }, 1000);
-      }
-    }
-
-    // Handle app unload
-    function handleBeforeUnload() {
-      if (isCallActive) {
-        const userConfirmed = confirm("You have an active call. Are you sure you want to leave?");
-        if (!userConfirmed) {
-          return false; // Prevent unload
-        }
-      }
-      return true; // Allow unload
-    }
-
-    // Initialize app based on session state
-    function initializeApp() {
+      // First show login form by default
+      document.getElementById("loginForm").style.display = "block";
       document.getElementById("loginBtn").onclick = startLogin;
       document.getElementById("logoutBtn").onclick = logout;
 
-      const savedTenant = sessionStorage.getItem("tenantId");
-      const savedAccessToken = sessionStorage.getItem("accessToken");
+      // Then try to initialize Teams SDK
+      microsoftTeams.app.initialize().then(() => {
+        console.log("✅ Teams SDK initialized");
+        
+        // Check for existing session
+        const savedTenant = sessionStorage.getItem("tenantId");
+        const savedAccessToken = sessionStorage.getItem("accessToken");
 
-      if (savedTenant && savedAccessToken) {
-        console.log("🔁 Session found, skipping login");
-        tenantId = savedTenant;
-        showEmbeddedUI(savedAccessToken);
-        setTimeout(() => {
-          sendInitMessageToTD(savedAccessToken);
-        }, 1000);
-      } else {
-        console.log("🆕 No session found, showing login form");
-        document.getElementById("loginForm").style.display = "block";
-      }
-    }
+        if (savedTenant && savedAccessToken) {
+          console.log("🔁 Session found");
+          tenantId = savedTenant;
+          showEmbeddedUI(savedAccessToken);
+        }
+      }).catch(err => {
+        console.log("⚠️ Teams SDK not available - running in standalone mode");
+      });
+    });
 
-    // Start Talkdesk login flow
+    // Start login process
     async function startLogin() {
       console.log("🔁 startLogin called");
       tenantId = document.getElementById("tenantUrl").value.trim();
@@ -180,57 +87,54 @@
         return;
       }
 
-      const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html";
-      const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodeURIComponent(redirectUri)}`;
+      // If Teams SDK is available, use Teams auth
+      if (microsoftTeams.authentication) {
+        const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup.html";
+        const loginUrl = `https://ganeshn82.github.io/ms-teams-html-host/login-start.html?tenant=${encodeURIComponent(tenantId)}&redirectUri=${encodeURIComponent(redirectUri)}`;
 
-      microsoftTeams.authentication.authenticate({
-        url: loginUrl,
-        width: 600,
-        height: 535,
-        successCallback: (accessToken) => {
-          console.log("✅ Login successful. tenantId:", tenantId);
-          sessionStorage.setItem("tenantId", tenantId);
-          sessionStorage.setItem("accessToken", accessToken);
-          tdInitSent = false;
-          showEmbeddedUI(accessToken);
-        },
-        failureCallback: (error) => {
-          console.error("❌ Login failed:", error);
-          alert("Login failed: " + error);
-        }
-      });
+        microsoftTeams.authentication.authenticate({
+          url: loginUrl,
+          width: 600,
+          height: 535,
+          successCallback: (accessToken) => {
+            handleLoginSuccess(accessToken);
+          },
+          failureCallback: (error) => {
+            console.error("❌ Login failed:", error);
+            alert("Login failed: " + error);
+          }
+        });
+      } else {
+        // Fallback for non-Teams environment (dev/testing)
+        alert("Running in standalone mode - would normally redirect to login");
+        const mockToken = "mock-token-" + Date.now();
+        handleLoginSuccess(mockToken);
+      }
     }
 
-    // Show Talkdesk embedded UI
+    function handleLoginSuccess(accessToken) {
+      console.log("✅ Login successful. tenantId:", tenantId);
+      sessionStorage.setItem("tenantId", tenantId);
+      sessionStorage.setItem("accessToken", accessToken);
+      tdInitSent = false;
+      showEmbeddedUI(accessToken);
+    }
+
     function showEmbeddedUI(accessToken) {
       document.getElementById("loginForm").style.display = "none";
       document.getElementById("logoutBtn").style.display = "block";
 
       const iframe = document.getElementById("td-emb-container");
-      const newSrc = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?access_token=${encodeURIComponent(accessToken)}&tenant=${tenantId}`;
-
-      if (!iframe.src || iframe.src !== newSrc) {
-        iframe.src = newSrc;
-        tdInitSent = false;
-      } else {
-        sendInitMessageToTD(accessToken);
-      }
-
+      iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?access_token=${encodeURIComponent(accessToken)}&tenant=${tenantId}`;
       iframe.style.display = "block";
+
       iframe.onload = () => {
         console.log("✅ Iframe loaded");
         sendInitMessageToTD(accessToken);
       };
-      iframe.onerror = () => {
-        console.error("❌ Iframe failed to load");
-      };
     }
 
-    // Send initialization message to Talkdesk iframe
     function sendInitMessageToTD(token) {
-      if (tdInitSent) return;
-      tdInitSent = true;
-
       const tdEmbContainer = document.getElementById('td-emb-container');
       const tenant = sessionStorage.getItem("tenantId");
 
@@ -256,7 +160,6 @@
       console.log("✅ postMessage sent with payload", payload);
     }
 
-    // Handle logout
     function logout() {
       console.log("🔁 Logging out...");
       sessionStorage.clear();
