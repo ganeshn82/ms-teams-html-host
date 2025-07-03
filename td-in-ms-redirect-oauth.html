@@ -31,11 +31,11 @@
 </head>
 
 <body>
-  <div class="container" id="loginForm">
+  <div class="container" id="loginForm" style="display:none;">
     <h2>Talkdesk Integration</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
-    <button id="loginBtn">Login6</button>
+    <button id="loginBtn">Login8</button>
   </div>
 
   <button class="container" id="logoutBtn" style="display:none;">Logout</button>
@@ -53,24 +53,31 @@
     let isCallActive = false;
     let tdInitSent = false;
 
+    // 🔧 Safety fallback: bind login click in case SDK fails
+    document.getElementById("loginBtn").addEventListener("click", startLogin);
+
     // Initialize Teams app and set up handlers
     window.addEventListener("load", () => {
       microsoftTeams.app.initialize().then(() => {
         console.log("✅ Teams SDK initialized");
-        
+
         // 1. Teams Core Handlers
         microsoftTeams.app.notifyAppLoaded();
         microsoftTeams.app.notifySuccess();
-        
+
         // 2. State Restoration
         window.addEventListener("message", handleIframeMessage);
         document.addEventListener('visibilitychange', handleVisibilityChange);
-        
+
         // 3. Enhanced BeforeUnload Handling
         microsoftTeams.app.registerBeforeUnloadHandler(handleBeforeUnload);
-          
-        // Initialize UI based on session state
+
+        // 4. UI Setup
         initializeApp();
+      }).catch((err) => {
+        console.error("❌ Teams SDK failed to initialize:", err);
+        // Still show login if SDK fails
+        document.getElementById("loginForm").style.display = "block";
       });
     });
 
@@ -108,7 +115,6 @@
 
     // Initialize app based on session state
     function initializeApp() {
-      document.getElementById("loginBtn").onclick = startLogin;
       document.getElementById("logoutBtn").onclick = logout;
 
       const savedTenant = sessionStorage.getItem("tenantId");
@@ -163,18 +169,16 @@
       document.getElementById("logoutBtn").style.display = "block";
 
       const iframe = document.getElementById("td-emb-container");
-      
-      // Only reload iframe if src changed or iframe was unloaded
+
       const newSrc = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?access_token=${encodeURIComponent(accessToken)}&tenant=${tenantId}`;
-      
+
       if (!iframe.src || iframe.src !== newSrc) {
         iframe.src = newSrc;
         tdInitSent = false;
       } else {
-        // If iframe is already loaded, just send init message
         sendInitMessageToTD(accessToken);
       }
-      
+
       iframe.style.display = "block";
       iframe.onload = () => {
         console.log("✅ Iframe loaded");
