@@ -54,6 +54,13 @@
     window.addEventListener("load", () => {
       microsoftTeams.app.initialize().then(() => {
         console.log("✅ Teams SDK initialized");
+                     // Check if we're in a background context
+                  microsoftTeams.app.getContext().then(context => {
+                if (context.page.isBackground) {
+                  // Minimal UI for background context
+                  document.body.innerHTML = '<div style="padding:20px;">Talkdesk is running in the background to maintain your call connection</div>';
+                  return;
+                }
 
         document.getElementById("loginBtn").onclick = startLogin;
         document.getElementById("logoutBtn").onclick = logout;
