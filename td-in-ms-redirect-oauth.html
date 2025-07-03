@@ -35,7 +35,7 @@
     <h2>Talkdesk Integration</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
-    <button id="loginBtn">Login8</button>
+    <button id="loginBtn">LoginTripl</button>
   </div>
 
   <button class="container" id="logoutBtn" style="display:none;">Logout</button>
@@ -52,34 +52,71 @@
     let tenantId = "";
     let isCallActive = false;
     let tdInitSent = false;
-
-    // 🔧 Safety fallback: bind login click in case SDK fails
-    document.getElementById("loginBtn").addEventListener("click", startLogin);
+    let teamsInitialized = false;
 
     // Initialize Teams app and set up handlers
     window.addEventListener("load", () => {
+      // First try to initialize with teamsCore for newer versions
+      if (microsoftTeams.teamsCore) {
+        microsoftTeams.teamsCore.initialize().then(() => {
+          console.log("✅ Teams Core SDK initialized");
+          teamsInitialized = true;
+          setupApp();
+        }).catch(err => {
+          console.warn("⚠️ Teams Core init failed, falling back to app.initialize", err);
+          initializeFallback();
+        });
+      } else {
+        initializeFallback();
+      }
+    });
+
+    function initializeFallback() {
       microsoftTeams.app.initialize().then(() => {
-        console.log("✅ Teams SDK initialized");
+        console.log("✅ Teams App SDK initialized");
+        teamsInitialized = true;
+        setupApp();
+      }).catch(err => {
+        console.error("❌ Teams SDK failed to initialize:", err);
+        // Fallback UI if Teams SDK fails
+        document.getElementById("loginForm").style.display = "block";
+      });
+    }
 
+    function setupApp() {
+      try {
         // 1. Teams Core Handlers
-        microsoftTeams.app.notifyAppLoaded();
-        microsoftTeams.app.notifySuccess();
+        if (microsoftTeams.app.notifyAppLoaded) {
+          microsoftTeams.app.notifyAppLoaded();
+          microsoftTeams.app.notifySuccess();
+        } else if (microsoftTeams.teamsCore?.registerOnLoadHandler) {
+          microsoftTeams.teamsCore.registerOnLoadHandler(() => {
+            microsoftTeams.app.notifySuccess();
+          });
+        }
 
-        // 2. State Restoration
+        // 2. BeforeUnload Handling (different methods for different SDK versions)
+        if (microsoftTeams.teamsCore?.registerBeforeUnloadHandler) {
+          microsoftTeams.teamsCore.registerBeforeUnloadHandler((readyToUnload) => {
+            readyToUnload(handleBeforeUnload());
+          });
+        } else if (microsoftTeams.app.registerBeforeUnloadHandler) {
+          microsoftTeams.app.registerBeforeUnloadHandler(handleBeforeUnload);
+        } else {
+          console.warn("⚠️ No beforeUnload handler available");
+        }
+
+        // 3. State Restoration
         window.addEventListener("message", handleIframeMessage);
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
-        // 3. Enhanced BeforeUnload Handling
-        microsoftTeams.app.registerBeforeUnloadHandler(handleBeforeUnload);
-
         // 4. UI Setup
         initializeApp();
-      }).catch((err) => {
-        console.error("❌ Teams SDK failed to initialize:", err);
-        // Still show login if SDK fails
+      } catch (err) {
+        console.error("❌ Setup error:", err);
         document.getElementById("loginForm").style.display = "block";
-      });
-    });
+      }
+    }
 
     // Handle messages from Talkdesk iframe
     function handleIframeMessage(event) {
@@ -115,6 +152,7 @@
 
     // Initialize app based on session state
     function initializeApp() {
+      document.getElementById("loginBtn").onclick = startLogin;
       document.getElementById("logoutBtn").onclick = logout;
 
       const savedTenant = sessionStorage.getItem("tenantId");
@@ -169,7 +207,6 @@
       document.getElementById("logoutBtn").style.display = "block";
 
       const iframe = document.getElementById("td-emb-container");
-
       const newSrc = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?access_token=${encodeURIComponent(accessToken)}&tenant=${tenantId}`;
 
       if (!iframe.src || iframe.src !== newSrc) {
