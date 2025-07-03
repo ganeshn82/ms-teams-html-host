@@ -112,7 +112,9 @@
       const authCode = sessionStorage.getItem("authCode");
       const iframe = document.getElementById("td-emb-container");
 
-      iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?code=${authCode}&state=xyz`;
+//      iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?code=${authCode}&state=xyz`;
+      iframe.src = `https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html?access_token=${encodeURIComponent(token)}&tenant=${tenantId}`;
+
       iframe.style.display = "block";
 
       iframe.onload = () => {
