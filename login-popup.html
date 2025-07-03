@@ -1,46 +1,94 @@
-// ✅ File: login-popup.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Completing Login…</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
 </head>
 <body>
-  <p>🔄 Completing login with Talkdesk…</p>
+  <p>Completing login…</p>
   <script>
-    microsoftTeams.app.initialize().then(() => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
-      const tenant = params.get("state");
-      const backend = "https://261f-49-207-220-61.ngrok-free.app";
 
-      if (!code || !tenant) {
-        microsoftTeams.authentication.notifyFailure("Missing OAuth code or tenant");
-        return;
-      }
+  const ngrokUrl = "https://8e74-49-207-194-232.ngrok-free.app";
 
-      fetch(`${backend}/exchange-code`, {
+  microsoftTeams.app.initialize().then(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const tenant = params.get("state");
+    const error = params.get("error");
+
+    if (error) {
+      microsoftTeams.authentication.notifyFailure(error);
+    } else if (code && tenant) {
+      fetch(`${ngrokUrl}/exchange-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, tenant })
       })
       .then(res => res.json())
       .then(data => {
+        console.log("🔍 Received from backend:", data);
         if (data.access_token) {
-          microsoftTeams.authentication.notifySuccess(JSON.stringify({
+          console.log("✅ notifySuccess with token");
+          microsoftTeams.authentication.notifySuccess(data.access_token);
+
+          // 🔁 Also notify parent via postMessage
+          window.opener.postMessage({
+            type: "td-auth-success",
             accessToken: data.access_token,
             tenant: tenant
-          }));
+          }, "*");
+
+          // ✅ Close the popup safely
+          setTimeout(() => window.close(), 500);
         } else {
           microsoftTeams.authentication.notifyFailure("Token not received");
         }
       })
       .catch(err => {
-        microsoftTeams.authentication.notifyFailure(err.message || "Token exchange failed");
+        microsoftTeams.authentication.notifyFailure(err.message || "Fetch failed");
       });
-    });
+    } else {
+      microsoftTeams.authentication.notifyFailure("Missing code or tenant");
+    }
+  });
+
+   /* const ngrokUrl = "https://c245-49-207-192-228.ngrok-free.app"; // ✅ NEW - matches current ngrok session
+
+
+    microsoftTeams.app.initialize().then(() => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+     // const tenant = sessionStorage.getItem("tenantId"); // ✅ should already be stored in tab before opening popup
+        const tenant = params.get("state"); // ✅ state = tenant passed earlier
+
+      const error = params.get("error");
+
+      if (error) {
+        microsoftTeams.authentication.notifyFailure(error);
+      } else if (code && tenant) {
+        fetch(`${ngrokUrl}/exchange-code`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, tenant })
+        })
+        .then(res => res.json())
+        .then(data => {
+          console.log("🔍 Received from backend:", data); // Add this
+          if (data.access_token) {
+            console.log("✅ notifySuccess with token");
+            microsoftTeams.authentication.notifySuccess(data.access_token); // ✅ token sent back to tab
+          } else {
+            microsoftTeams.authentication.notifyFailure("Token not received");
+          }
+        })
+        .catch(err => {
+          microsoftTeams.authentication.notifyFailure(err.message || "Fetch failed");
+        });
+      } else {
+        microsoftTeams.authentication.notifyFailure("Missing code or tenant");
+      }
+    }); */
   </script>
 </body>
 </html>
