@@ -35,10 +35,10 @@
     <h2>Talkdesk Integration</h2>
     <label for="tenantUrl">Enter your Talkdesk Tenant URL:</label>
     <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
-    <button id="loginBtn">Login4</button>
+    <button id="loginBtn">Login6</button>
   </div>
 
-  <button class="container" id="logoutBtn">Logout</button>
+  <button class="container" id="logoutBtn" style="display:none;">Logout</button>
 
   <iframe
     id="td-emb-container"
@@ -51,6 +51,7 @@
   <script>
     let tenantId = "";
     let isCallActive = false;
+    let tdInitSent = false;
 
     // Initialize Teams app and set up handlers
     window.addEventListener("load", () => {
@@ -88,6 +89,9 @@
       if (document.visibilityState === 'visible' && sessionStorage.getItem("accessToken")) {
         console.log('Restoring Talkdesk session');
         showEmbeddedUI(sessionStorage.getItem("accessToken"));
+        setTimeout(() => {
+          sendInitMessageToTD(sessionStorage.getItem("accessToken"));
+        }, 1000);
       }
     }
 
@@ -114,6 +118,9 @@
         console.log("🔁 Session found, skipping login");
         tenantId = savedTenant;
         showEmbeddedUI(savedAccessToken);
+        setTimeout(() => {
+          sendInitMessageToTD(savedAccessToken);
+        }, 1000);
       } else {
         console.log("🆕 No session found, showing login form");
         document.getElementById("loginForm").style.display = "block";
@@ -140,6 +147,7 @@
           console.log("✅ Login successful. tenantId:", tenantId);
           sessionStorage.setItem("tenantId", tenantId);
           sessionStorage.setItem("accessToken", accessToken);
+          tdInitSent = false;
           showEmbeddedUI(accessToken);
         },
         failureCallback: (error) => {
@@ -152,6 +160,8 @@
     // Show Talkdesk embedded UI
     function showEmbeddedUI(accessToken) {
       document.getElementById("loginForm").style.display = "none";
+      document.getElementById("logoutBtn").style.display = "block";
+
       const iframe = document.getElementById("td-emb-container");
       
       // Only reload iframe if src changed or iframe was unloaded
@@ -159,6 +169,7 @@
       
       if (!iframe.src || iframe.src !== newSrc) {
         iframe.src = newSrc;
+        tdInitSent = false;
       } else {
         // If iframe is already loaded, just send init message
         sendInitMessageToTD(accessToken);
@@ -176,6 +187,9 @@
 
     // Send initialization message to Talkdesk iframe
     function sendInitMessageToTD(token) {
+      if (tdInitSent) return;
+      tdInitSent = true;
+
       const tdEmbContainer = document.getElementById('td-emb-container');
       const tenant = sessionStorage.getItem("tenantId");
 
