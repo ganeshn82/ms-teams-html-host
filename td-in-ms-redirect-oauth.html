@@ -54,7 +54,18 @@
     window.addEventListener("load", () => {
       microsoftTeams.app.initialize().then(() => {
         console.log("✅ Teams SDK initialized");
-
+            // Enable app caching
+            microsoftTeams.teamsCore.registerOnLoadHandler((data) => {
+              console.log("📦 teamsCore.loadHandler", data);
+              microsoftTeams.app.notifySuccess(); // ✅ Important
+            });
+            
+            microsoftTeams.teamsCore.registerBeforeUnloadHandler((readyToUnload) => {
+              console.log("🧹 teamsCore.beforeUnload called");
+              // Optional: dispose resources here
+              readyToUnload(); // ✅ MUST call
+              return true;
+            });
         document.getElementById("loginBtn").onclick = startLogin;
         document.getElementById("logoutBtn").onclick = logout;
 
