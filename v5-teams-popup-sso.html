@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Talkdesk Launcher</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .container { max-width: 400px; margin: auto; }
+    input, button { width: 100%; padding: 12px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Talkdesk Workspace</h2>
+    <label for="tenantUrl">Enter your Talkdesk Tenant ID:</label>
+    <input type="text" id="tenantUrl" placeholder="e.g. ucdirectoryprd" />
+    <button id="launchBtn">Launch Workspace</button>
+    <button id="logoutBtn">Clear Session</button>
+  </div>
+
+  <script>
+    microsoftTeams.app.initialize().then(() => {
+      console.log("✅ Teams SDK initialized");
+
+      document.getElementById("launchBtn").onclick = () => {
+        const tenantId = document.getElementById("tenantUrl").value.trim();
+        if (!tenantId) {
+          alert("Please enter a valid tenant ID");
+          return;
+        }
+
+        microsoftTeams.authentication.authenticate({
+          url: `https://ganeshn82.github.io/ms-teams-html-host/login-start-sso.html?tenant=${encodeURIComponent(tenantId)}`,
+          width: 1200,
+          height: 800,
+          successCallback: (result) => {
+            console.log("✅ Auth success");
+            // No action needed here. The popup will take over post-login.
+          },
+          failureCallback: (error) => {
+            console.error("❌ Auth failed:", error);
+            alert("Login failed: " + error);
+          }
+        });
+      };
+
+      document.getElementById("logoutBtn").onclick = () => {
+        sessionStorage.clear();
+        alert("Session cleared");
+      };
+    });
+  </script>
+</body>
+</html>
