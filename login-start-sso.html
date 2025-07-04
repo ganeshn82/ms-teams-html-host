@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Starting Login...</title>
+</head>
+<body>
+  <p>Redirecting to Talkdesk login…</p>
+  <script>
+    const tenant = new URLSearchParams(location.search).get("tenant");
+    const redirectUri = "https://ganeshn82.github.io/ms-teams-html-host/login-popup-sso.html";
+
+    if (tenant && redirectUri) {
+      const authUrl = `https://${tenant}.talkdeskid.com/oauth/authorize` +
+        `?client_id=b243bbd4f95c4d37ba8a09a485fae07d` +
+        `&response_type=code` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&state=${encodeURIComponent(tenant)}`;
+
+      location.replace(authUrl);
+    } else {
+      document.body.textContent = "❌ Missing tenant or redirectUri";
+    }
+  </script>
+</body>
+</html>
