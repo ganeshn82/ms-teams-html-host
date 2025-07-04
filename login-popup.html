@@ -26,41 +26,34 @@
       }
 
       try {
-        const response = await fetch("https://8e74-49-207-194-232.ngrok-free.app/exchange-code", {
+        // Step 1: Exchange auth code for access token
+        const tokenResponse = await fetch("https://8e74-49-207-194-232.ngrok-free.app/exchange-code", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code, tenant })
         });
 
-        if (!response.ok) throw new Error("Token exchange failed");
+        if (!tokenResponse.ok) throw new Error("Token exchange failed");
+        const { access_token } = await tokenResponse.json();
+        console.log("✅ Access token:", access_token);
 
-        const { access_token } = await response.json();
-        console.log("✅ Access token received:", access_token);
+        // Step 2: Request launch_url from Talkdesk backend
+        const launchUrlRes = await fetch("https://8e74-49-207-194-232.ngrok-free.app/get-launch-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessToken: access_token })
+        });
 
+        if (!launchUrlRes.ok) throw new Error("Failed to get launch_url");
+        const { launch_url } = await launchUrlRes.json();
+        console.log("🚀 Launch URL:", launch_url);
+
+        // Step 3: Load the secure pre-auth URL in the iframe
         const iframe = document.getElementById("talkdeskIframe");
-        const targetUrl = "https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html";
-        iframe.src = targetUrl;
+        iframe.src = launch_url;
+        iframe.style.display = "block";
+        document.getElementById("status").style.display = "none";
 
-        iframe.onload = () => {
-          const payload = {
-            url: window.location.origin,
-            int: "msteams",
-            env: "prd-us",
-            aid: "677b612f79c71e3ea18557c2",
-            view: "workspace",
-            auth: {
-              accessToken: access_token,
-              tenant: tenant,
-              accountId: "6294d0e40934b864729451e3"
-            }
-          };
-
-          setTimeout(() => {
-            iframe.contentWindow.postMessage({ action: "init_td_embedded", data: payload }, new URL(targetUrl).origin);
-            document.getElementById("status").style.display = "none";
-            iframe.style.display = "block";
-          }, 400);
-        };
       } catch (err) {
         console.error("❌ Error loading workspace:", err);
         document.getElementById("status").textContent = "❌ Failed to authenticate or load Talkdesk";
