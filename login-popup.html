@@ -27,7 +27,7 @@
 
       try {
         // Step 1: Exchange auth code for access token
-        const tokenResponse = await fetch("https://8e74-49-207-194-232.ngrok-free.app/exchange-code", {
+        const tokenResponse = await fetch("https://7748-122-15-180-249.ngrok-free.app/exchange-code", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code, tenant })
@@ -38,7 +38,7 @@
         console.log("✅ Access token:", access_token);
 
         // Step 2: Request launch_url from Talkdesk backend
-        const launchUrlRes = await fetch("https://8e74-49-207-194-232.ngrok-free.app/get-launch-url", {
+        const launchUrlRes = await fetch("https://7748-122-15-180-249.ngrok-free.app/get-launch-url", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ accessToken: access_token })
