@@ -2,93 +2,72 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Completing Login…</title>
-  <script src="https://res.cdn.office.net/teams-js/2.12.0/js/MicrosoftTeams.min.js"></script>
+  <title>Loading Workspace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'; connect-src *;">
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; }
+    iframe { width: 100%; height: 100%; border: none; display: none; }
+    #status { padding: 20px; }
+  </style>
 </head>
 <body>
-  <p>Completing login…</p>
+  <div id="status">🔄 Logging in and loading Talkdesk Workspace…</div>
+  <iframe id="talkdeskIframe" allow="microphone"></iframe>
+
   <script>
+    async function main() {
+      const code = new URLSearchParams(location.search).get("code");
+      const tenant = new URLSearchParams(location.search).get("state"); // passed as 'state'
 
-  const ngrokUrl = "https://8e74-49-207-194-232.ngrok-free.app";
+      if (!code || !tenant) {
+        document.getElementById("status").textContent = "❌ Missing code or tenant";
+        return;
+      }
 
-  microsoftTeams.app.initialize().then(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    const tenant = params.get("state");
-    const error = params.get("error");
-
-    if (error) {
-      microsoftTeams.authentication.notifyFailure(error);
-    } else if (code && tenant) {
-      fetch(`${ngrokUrl}/exchange-code`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, tenant })
-      })
-      .then(res => res.json())
-      .then(data => {
-        console.log("🔍 Received from backend:", data);
-        if (data.access_token) {
-          console.log("✅ notifySuccess with token");
-          microsoftTeams.authentication.notifySuccess(data.access_token);
-
-          // 🔁 Also notify parent via postMessage
-          window.opener.postMessage({
-            type: "td-auth-success",
-            accessToken: data.access_token,
-            tenant: tenant
-          }, "*");
-
-          // ✅ Close the popup safely
-          setTimeout(() => window.close(), 500);
-        } else {
-          microsoftTeams.authentication.notifyFailure("Token not received");
-        }
-      })
-      .catch(err => {
-        microsoftTeams.authentication.notifyFailure(err.message || "Fetch failed");
-      });
-    } else {
-      microsoftTeams.authentication.notifyFailure("Missing code or tenant");
-    }
-  });
-
-   /* const ngrokUrl = "https://c245-49-207-192-228.ngrok-free.app"; // ✅ NEW - matches current ngrok session
-
-
-    microsoftTeams.app.initialize().then(() => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
-     // const tenant = sessionStorage.getItem("tenantId"); // ✅ should already be stored in tab before opening popup
-        const tenant = params.get("state"); // ✅ state = tenant passed earlier
-
-      const error = params.get("error");
-
-      if (error) {
-        microsoftTeams.authentication.notifyFailure(error);
-      } else if (code && tenant) {
-        fetch(`${ngrokUrl}/exchange-code`, {
+      try {
+        const response = await fetch("https://<your-ngrok-or-backend-host>/exchange-code", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code, tenant })
-        })
-        .then(res => res.json())
-        .then(data => {
-          console.log("🔍 Received from backend:", data); // Add this
-          if (data.access_token) {
-            console.log("✅ notifySuccess with token");
-            microsoftTeams.authentication.notifySuccess(data.access_token); // ✅ token sent back to tab
-          } else {
-            microsoftTeams.authentication.notifyFailure("Token not received");
-          }
-        })
-        .catch(err => {
-          microsoftTeams.authentication.notifyFailure(err.message || "Fetch failed");
         });
-      } else {
-        microsoftTeams.authentication.notifyFailure("Missing code or tenant");
+
+        if (!response.ok) throw new Error("Token exchange failed");
+
+        const { access_token } = await response.json();
+        console.log("✅ Access token received:", access_token);
+
+        const iframe = document.getElementById("talkdeskIframe");
+        const targetUrl = "https://prd-cdn-talkdesk.talkdesk.com/talkdesk-embedded/latest/generic/index.html";
+        iframe.src = targetUrl;
+
+        iframe.onload = () => {
+          const payload = {
+            url: window.location.origin,
+            int: "msteams",
+            env: "prd-us",
+            aid: "677b612f79c71e3ea18557c2",
+            view: "workspace",
+            auth: {
+              accessToken: access_token,
+              tenant: tenant,
+              accountId: "6294d0e40934b864729451e3"
+            }
+          };
+
+          setTimeout(() => {
+            iframe.contentWindow.postMessage({ action: "init_td_embedded", data: payload }, new URL(targetUrl).origin);
+            document.getElementById("status").style.display = "none";
+            iframe.style.display = "block";
+          }, 400);
+        };
+      } catch (err) {
+        console.error("❌ Error loading workspace:", err);
+        document.getElementById("status").textContent = "❌ Failed to authenticate or load Talkdesk";
       }
-    }); */
+    }
+
+    main();
   </script>
 </body>
 </html>
